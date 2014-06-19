@@ -1,0 +1,34 @@
+name: StorageSign
+main: wacky.storagesign.StorageSignCore
+version: 1.1.3
+author: wackyls6
+softdepend: [WorldGuard]
+website: http://forum.minecraftuser.jp/viewtopic.php?t=15065
+permissions:
+  storagesign.*:
+    description:
+    children:
+      storagesign.use: true
+      storagesign.craft: true
+      storagesign.place: true
+      storagesign.break: true
+      storagesign.create: true
+      storagesign.setquantity: true
+  storagesign.use:
+    description: Allows you to use a storagesign
+    default: true
+  storagesign.craft:
+    description: Allows you to craft a storagesign
+    default: true
+  storagesign.place:
+    description: Allows you to place a storagesign
+    default: true
+  storagesign.break:
+    description: Allows you to break a storagesign
+    default: true
+  storagesign.create:
+    description: Allows you to create a storagesign
+    default: op
+  storagesign.setquantity:
+    description: Allows you to set quantity in a storagesign
+    default: op

@@ -1,0 +1,7 @@
+#StorageSign default config.yml
+no-permisson: You don't have permission
+
+manual-import: true
+manual-export: true
+auto-import: true
+auto-export: true
