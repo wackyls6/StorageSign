@@ -88,7 +88,7 @@ public class StorageSignCore extends JavaPlugin implements Listener{
 		if(str.matches("STAINGLASS_P")) return Material.STAINED_GLASS_PANE;
 		Material mat = Material.matchMaterial(str);
 		if(mat == null)
-		{//看板の文字数制限に対応
+		{//看板の文字数制限に対応.
 			for(Material m : Material.values())
 			{
 				if(m.toString().startsWith(str)) return m;
