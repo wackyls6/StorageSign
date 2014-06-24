@@ -13,7 +13,6 @@ permissions:
       storagesign.place: true
       storagesign.break: true
       storagesign.create: true
-      storagesign.setquantity: true
   storagesign.use:
     description: Allows you to use a storagesign
     default: true
@@ -28,7 +27,4 @@ permissions:
     default: true
   storagesign.create:
     description: Allows you to create a storagesign
-    default: op
-  storagesign.setquantity:
-    description: Allows you to set quantity in a storagesign
     default: op

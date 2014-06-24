@@ -5,3 +5,4 @@ manual-import: true
 manual-export: true
 auto-import: true
 auto-export: true
+autocollect: true
