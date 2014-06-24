@@ -463,7 +463,7 @@ public class StorageSignCore extends JavaPlugin implements Listener{
 	}
 
 	private void exportSign(Sign sign, StorageSign storageSign, ItemStack item, Inventory inv, Inventory dest)
-	{//1.7では問題なし.(1.6ではスキマ送り)
+	{//1.7では問題なしみたい.(1.6ではスキマ送り)
 		if(!inv.containsAtLeast(item, item.getMaxStackSize()) && storageSign.getAmount() >= item.getAmount())
 		{
 				inv.addItem(item);
