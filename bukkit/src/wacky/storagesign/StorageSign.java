@@ -64,7 +64,7 @@ public class StorageSign {
 				if(m.toString().startsWith(str)) return m;
 			}
 		}
-		return mat;//nullなら空
+		return mat;//nullなら空.
 	}
 
 	protected String getShortName()
