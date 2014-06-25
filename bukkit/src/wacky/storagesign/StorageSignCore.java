@@ -539,6 +539,7 @@ public class StorageSignCore extends JavaPlugin implements Listener{
 		//ここでは、エラーを出さずに無視する
 		if(!isStorageSign(player.getItemInHand()) || !player.hasPermission("storagesign.autocollect")) return;
 		StorageSign storagesign = new StorageSign(player.getItemInHand());
+		if(storagesign.getContents() == null) return;
 		if(storagesign.getContents().isSimilar(item) && player.getInventory().containsAtLeast(item, item.getMaxStackSize()) && storagesign.getStackSize() == 1)
 		{
 			storagesign.addAmount(item.getAmount());
