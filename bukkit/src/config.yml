@@ -6,3 +6,4 @@ manual-export: true
 auto-import: true
 auto-export: true
 autocollect: true
+hardrecpe: false

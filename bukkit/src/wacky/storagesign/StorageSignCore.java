@@ -27,6 +27,7 @@ import org.bukkit.event.inventory.CraftItemEvent;
 import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.event.inventory.InventoryPickupItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
@@ -40,9 +41,11 @@ public class StorageSignCore extends JavaPlugin implements Listener{
 	public void onEnable()
 	{
 		ShapedRecipe storageSignRecipe = new ShapedRecipe(StorageSign.emptySign(1));
-		storageSignRecipe.shape("CCC","CSC","CCC");
+		storageSignRecipe.shape("CCC","CSC","CHC");
 		storageSignRecipe.setIngredient('C', Material.CHEST);
 		storageSignRecipe.setIngredient('S', Material.SIGN);
+		if(this.getConfig().getBoolean("hardrecipe")) storageSignRecipe.setIngredient('H', Material.ENDER_CHEST);
+		else storageSignRecipe.setIngredient('H', Material.CHEST);
 		getServer().addRecipe(storageSignRecipe);
 		getServer().getPluginManager().registerEvents(this, this);
 
@@ -466,6 +469,7 @@ public class StorageSignCore extends JavaPlugin implements Listener{
 	{//1.7では問題なしみたい.(1.6ではスキマ送り)
 		if(!inv.containsAtLeast(item, item.getMaxStackSize()) && storageSign.getAmount() >= item.getAmount())
 		{
+			if(Bukkit.getBukkitVersion().startsWith("1.6") && dest.firstEmpty() == -1) return;//対策
 				inv.addItem(item);
 				storageSign.addAmount(-item.getAmount());
 		}
@@ -523,6 +527,23 @@ public class StorageSignCore extends JavaPlugin implements Listener{
 				}
 			}
 			if(flag) importSign(sign, storageSign, event.getItem().getItemStack(), event.getInventory());
+		}
+	}
+
+	@EventHandler
+	public void onPlayerPickupItem(PlayerPickupItemEvent event)
+	{
+		if(event.isCancelled() || !this.getConfig().getBoolean("autocollect")) return;
+		Player player = event.getPlayer();
+		ItemStack item = event.getItem().getItemStack();
+		//ここでは、エラーを出さずに無視する
+		if(!isStorageSign(player.getItemInHand()) || !player.hasPermission("storagesign.autocollect")) return;
+		StorageSign storagesign = new StorageSign(player.getItemInHand());
+		if(storagesign.getContents().isSimilar(item) && player.getInventory().containsAtLeast(item, item.getMaxStackSize()) && storagesign.getStackSize() == 1)
+		{
+			storagesign.addAmount(item.getAmount());
+			player.getInventory().removeItem(item);
+			player.setItemInHand(storagesign.getStorageSign());
 		}
 	}
 }
