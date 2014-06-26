@@ -243,7 +243,7 @@ public class StorageSignCore extends JavaPlugin implements Listener{
 				if(storageSign.isEmpty()) return;
 				ItemStack item = storageSign.getContents();
 
-				int max = storageSign.getMaterial().getMaxStackSize();
+				int max = item.getMaxStackSize();
 
 				if(player.isSneaking()) storageSign.addAmount(-1);
 				else if(storageSign.getAmount() > max)
