@@ -53,9 +53,12 @@ public class StorageSign {
 	protected Material getMaterial(String str)
 	{
 		if(str.matches("EmptySign")) return Material.LOCKED_CHEST;
-		if(str.matches("REDSTONE_TORCH")) return Material.REDSTONE_TORCH_ON;
-		if(str.matches("RS_COMPARATOR")) return Material.REDSTONE_COMPARATOR;
-		if(str.matches("STAINGLASS_P")) return Material.STAINED_GLASS_PANE;
+		if(str.startsWith("REDSTONE_TORCH")) return Material.REDSTONE_TORCH_ON;
+		if(str.startsWith("RS_COMPARATOR")) return Material.REDSTONE_COMPARATOR;
+		if(str.startsWith("STAINGLASS_P")) return Material.STAINED_GLASS_PANE;
+		if(str.startsWith("BROWN_MUSH_B")) return Material.HUGE_MUSHROOM_1;
+		if(str.startsWith("RED_MUSH_BLO")) return Material.HUGE_MUSHROOM_2;
+
 		Material mat = Material.matchMaterial(str);
 		if(mat == null)
 		{//看板の文字数制限に対応
@@ -69,11 +72,13 @@ public class StorageSign {
 
 	protected String getShortName()
 	{
-		if(mat == null || mat == Material.AIR) return "";//1.6でバグるって報告あったので
-		else if(mat == Material.LOCKED_CHEST) return "EmptySign";
-		else if(!Bukkit.getBukkitVersion().startsWith("1.6") && mat == Material.STAINED_GLASS_PANE) return "STAINGLASS_P:" + damage;
+		if(mat == null || mat == Material.AIR) return "";
+		else if(mat == Material.LOCKED_CHEST) return "EmptySign";//1.6でバグるって報告あったので
+		else if(!Bukkit.getBukkitVersion().startsWith("1.6") && mat == Material.STAINED_GLASS_PANE) return damage == 0 ? "STAINGLASS_PANE" : "STAINGLASS_P:" + damage;
 		else if(mat == Material.REDSTONE_COMPARATOR) return "RS_COMPARATOR";
 		else if(mat == Material.REDSTONE_TORCH_ON) return "REDSTONE_TORCH";
+		else if(mat == Material.HUGE_MUSHROOM_1) return damage == 0 ? "BROWN_MUSH_BLOC" : "BROWN_MUSH_B:" + damage;
+		else if(mat == Material.HUGE_MUSHROOM_2) return damage == 0 ? "RED_MUSH_BLOCK" : "RED_MUSH_BLO:" + damage;
 
 		int limit = 15;
 		if(extraData != 0) limit -= String.valueOf(extraData).length() + 1;
