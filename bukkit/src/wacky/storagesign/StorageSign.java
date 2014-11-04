@@ -58,6 +58,7 @@ public class StorageSign {
 		if(str.startsWith("STAINGLASS_P")) return Material.STAINED_GLASS_PANE;
 		if(str.startsWith("BROWN_MUSH_B")) return Material.HUGE_MUSHROOM_1;
 		if(str.startsWith("RED_MUSH_BLO")) return Material.HUGE_MUSHROOM_2;
+		if(str.startsWith("ENCHBOOK")) return Material.ENCHANTED_BOOK;
 
 		Material mat = Material.matchMaterial(str);
 		if(mat == null)
@@ -79,6 +80,7 @@ public class StorageSign {
 		else if(mat == Material.REDSTONE_TORCH_ON) return "REDSTONE_TORCH";
 		else if(mat == Material.HUGE_MUSHROOM_1) return damage == 0 ? "BROWN_MUSH_BLOC" : "BROWN_MUSH_B:" + damage;
 		else if(mat == Material.HUGE_MUSHROOM_2) return damage == 0 ? "RED_MUSH_BLOCK" : "RED_MUSH_BLO:" + damage;
+		else if(mat == Material.ENCHANTED_BOOK) return "ENCHBOOK:" + damage + ":" + extraData;
 
 		int limit = 15;
 		if(extraData != 0) limit -= String.valueOf(extraData).length() + 1;
@@ -148,6 +150,21 @@ public class StorageSign {
 			return item;
 		}
 		return new ItemStack(mat, 1, damage);
+	}
+
+	public boolean isSimilar(ItemStack item){
+		if(item == null) return false;
+		if(mat == Material.ENCHANTED_BOOK && item.getType() == Material.ENCHANTED_BOOK)
+		{
+			EnchantmentStorageMeta enchantMeta = (EnchantmentStorageMeta)item.getItemMeta();
+			if(enchantMeta.getStoredEnchants().size() == 1)
+			{
+				Enchantment ench = enchantMeta.getStoredEnchants().keySet().toArray(new Enchantment[0])[0];
+				if(ench.getId() == damage && enchantMeta.getStoredEnchantLevel(ench) == extraData) return true;
+			}
+			return false;
+		}
+		return getContents().isSimilar(item);
 	}
 
 	public Material getMaterial() {

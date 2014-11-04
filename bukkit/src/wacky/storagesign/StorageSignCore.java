@@ -12,6 +12,7 @@ import org.bukkit.block.BlockState;
 import org.bukkit.block.DoubleChest;
 import org.bukkit.block.Sign;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Minecart;
 import org.bukkit.entity.Player;
@@ -21,6 +22,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockPhysicsEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.inventory.CraftItemEvent;
@@ -34,17 +36,19 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.util.NumberConversions;
 
 public class StorageSignCore extends JavaPlugin implements Listener{
 
+	FileConfiguration config;
+
 	public void onEnable()
 	{
+		config = this.getConfig();
 		ShapedRecipe storageSignRecipe = new ShapedRecipe(StorageSign.emptySign(1));
 		storageSignRecipe.shape("CCC","CSC","CHC");
 		storageSignRecipe.setIngredient('C', Material.CHEST);
 		storageSignRecipe.setIngredient('S', Material.SIGN);
-		if(this.getConfig().getBoolean("hardrecipe")) storageSignRecipe.setIngredient('H', Material.ENDER_CHEST);
+		if(config.getBoolean("hardrecipe")) storageSignRecipe.setIngredient('H', Material.ENDER_CHEST);
 		else storageSignRecipe.setIngredient('H', Material.CHEST);
 		getServer().addRecipe(storageSignRecipe);
 		getServer().getPluginManager().registerEvents(this, this);
@@ -53,16 +57,6 @@ public class StorageSignCore extends JavaPlugin implements Listener{
 	}
 
 	public void onDisable(){}
-
-	public static String LargeChest(int i)
-	{
-		return String.valueOf(i / 3456) + "LC " + String.valueOf(i % 3456 / 64) + "s " + String.valueOf(i % 64);
-	}
-
-	public static String LargeChest(String str)
-	{
-		return LargeChest(NumberConversions.toInt(str));
-	}
 
 	public boolean isStorageSign(ItemStack item)
 	{
@@ -81,48 +75,6 @@ public class StorageSignCore extends JavaPlugin implements Listener{
 			if(sign.getLine(0).matches("StorageSign")) return true;
 		}
 		return false;
-	}
-
-	public static Material getMaterial(String str)
-	{
-		if(str.matches("EmptySign")) return Material.LOCKED_CHEST;
-		if(str.matches("REDSTONE_TORCH")) return Material.REDSTONE_TORCH_ON;
-		if(str.matches("RS_COMPARATOR")) return Material.REDSTONE_COMPARATOR;
-		if(str.matches("STAINGLASS_P")) return Material.STAINED_GLASS_PANE;
-		Material mat = Material.matchMaterial(str);
-		if(mat == null)
-		{//看板の文字数制限に対応.
-			for(Material m : Material.values())
-			{
-				if(m.toString().startsWith(str)) return m;
-			}
-		}
-		return mat;//ぬるぽなら報告オナシャス
-	}
-
-	public static String getShortenName(Material mat, String meta)
-	{
-		if(mat == Material.AIR) return "";//1.6でバグるって報告あったので
-		else if(mat == Material.LOCKED_CHEST) return "EmptySign";
-		else if(!Bukkit.getBukkitVersion().startsWith("1.6") && mat == Material.STAINED_GLASS_PANE) return "STAINGLASS_P:" + meta;
-		else if(mat == Material.REDSTONE_COMPARATOR) return "RS_COMPARATOR";
-		else if(mat == Material.REDSTONE_TORCH_ON) return "REDSTONE_TORCH";
-		else if(meta.matches("0") || meta.matches(""))
-		{
-			if(mat.toString().length() > 15 )
-			{
-				return mat.toString().substring(0, 15);
-			}else{
-				return mat.toString();
-			}
-		}else{
-			if(mat.toString().length() > 14 - meta.length())
-			{
-				return mat.toString().substring(0, 14 - meta.length()) + ":" + meta;
-			}else{
-				return mat.toString() + ":" + meta;
-			}
-		}
 	}
 
 	@EventHandler
@@ -149,7 +101,7 @@ public class StorageSignCore extends JavaPlugin implements Listener{
 			event.setUseInteractedBlock(Result.DENY);
 			if(!player.hasPermission("storagesign.use"))
 			{
-				player.sendMessage(ChatColor.RED + this.getConfig().getString("no-permisson"));
+				player.sendMessage(ChatColor.RED + config.getString("no-permisson"));
 				event.setCancelled(true);
 				return;
 			}
@@ -188,26 +140,30 @@ public class StorageSignCore extends JavaPlugin implements Listener{
 			{
 				//看板合成
 				StorageSign itemSign = new StorageSign(itemInHand);
-				if(itemSign.getMaterial() == storageSign.getMaterial() && itemSign.getDamage() == storageSign.getDamage() && itemSign.getExtraData() == storageSign.getExtraData() && this.getConfig().getBoolean("manual-import"))
+				if(itemSign.getMaterial() == storageSign.getMaterial() && itemSign.getDamage() == storageSign.getDamage() && itemSign.getExtraData() == storageSign.getExtraData() && config.getBoolean("manual-import"))
 				{
 					storageSign.addAmount(itemSign.getAmount() * itemSign.getStackSize());
 					itemSign.setAmount(0);
 					player.setItemInHand(itemSign.getStorageSign());
 				}//空看板収納
-				else if(itemSign.isEmpty() && storageSign.getMaterial() == Material.LOCKED_CHEST && this.getConfig().getBoolean("manual-import"))
+				else if(itemSign.isEmpty() && storageSign.getMaterial() == Material.LOCKED_CHEST && config.getBoolean("manual-import"))
 				{
 					storageSign.addAmount(itemSign.getStackSize());
 					player.getInventory().clear(player.getInventory().getHeldItemSlot());
 				}
 				//中身分割機能
-				else if(itemSign.isEmpty() && storageSign.getAmount() > itemInHand.getAmount() && this.getConfig().getBoolean("manual-export"))
+				else if(itemSign.isEmpty() && storageSign.getAmount() > itemInHand.getAmount() && config.getBoolean("manual-export"))
 				{
 					itemSign.setMaterial(storageSign.getMaterial());
 					itemSign.setDamage(storageSign.getDamage());
 					itemSign.setExtraData(storageSign.getExtraData());
-					itemSign.setAmount(storageSign.getAmount() / (itemSign.getStackSize() + 1));
+
+					int limit = config.getInt("divide-limit");
+
+					if(limit > 0 && storageSign.getAmount() > limit * itemSign.getStackSize() + 1) itemSign.setAmount(limit);
+					else itemSign.setAmount(storageSign.getAmount() / (itemSign.getStackSize() + 1));
 					player.setItemInHand(itemSign.getStorageSign());
-					storageSign.setAmount(itemSign.getAmount() + storageSign.getAmount() % (itemSign.getStackSize() + 1 ));//余りは看板に引き受けてもらう
+					storageSign.setAmount(storageSign.getAmount() - (itemSign.getStackSize() * itemSign.getAmount()));//余りは看板に引き受けてもらう
 				}
 				//看板記入を一気に
 				for(int i=0; i<4; i++) sign.setLine(i, storageSign.getSigntext(i));
@@ -217,9 +173,9 @@ public class StorageSignCore extends JavaPlugin implements Listener{
 
 			//ここから搬入
 			mat = storageSign.getMaterial();//使い回しｗ
-			if(storageSign.getContents().isSimilar(itemInHand))
+			if(storageSign.isSimilar(itemInHand))
 			{
-				if(!this.getConfig().getBoolean("manual-import")) return;
+				if(!config.getBoolean("manual-import")) return;
 				if(player.isSneaking())
 				{
 					storageSign.addAmount(itemInHand.getAmount());
@@ -228,7 +184,7 @@ public class StorageSignCore extends JavaPlugin implements Listener{
 				else for(int i=0; i<player.getInventory().getSize(); i++)
 				{
 					ItemStack item = player.getInventory().getItem(i);
-					if(storageSign.getContents().isSimilar(item))
+					if(storageSign.isSimilar(item))
 					{
 						storageSign.addAmount(item.getAmount());
 						player.getInventory().clear(i);
@@ -238,7 +194,7 @@ public class StorageSignCore extends JavaPlugin implements Listener{
 				player.updateInventory();
 			}
 
-			else if(this.getConfig().getBoolean("manual-export"))//放出
+			else if(config.getBoolean("manual-export"))//放出
 			{
 				if(storageSign.isEmpty()) return;
 				ItemStack item = storageSign.getContents();
@@ -289,7 +245,7 @@ public class StorageSignCore extends JavaPlugin implements Listener{
 				sign.update();
 			}
 			else{
-				event.getPlayer().sendMessage(ChatColor.RED + this.getConfig().getString("no-permisson"));
+				event.getPlayer().sendMessage(ChatColor.RED + config.getString("no-permisson"));
 				event.setCancelled(true);
 			}
 		}
@@ -315,7 +271,7 @@ public class StorageSignCore extends JavaPlugin implements Listener{
 		if(breakSignMap.isEmpty()) return;
 		if(!event.getPlayer().hasPermission("storagesign.break"))
 		{
-			event.getPlayer().sendMessage(ChatColor.RED + this.getConfig().getString("no-permisson"));
+			event.getPlayer().sendMessage(ChatColor.RED + config.getString("no-permisson"));
 			event.setCancelled(true);
 			return;
 		}
@@ -329,12 +285,18 @@ public class StorageSignCore extends JavaPlugin implements Listener{
 	}
 
 	@EventHandler
+	public void onBlockPhysics(BlockPhysicsEvent event)
+	{
+		event.setCancelled(isStorageSign(event.getBlock()) && config.getBoolean("no-bud"));
+	}
+
+	@EventHandler
 	public void onBlockPlace(BlockPlaceEvent event)
 	{
 		if(event.isCancelled() || !isStorageSign(event.getItemInHand())) return;
 		if(!event.getPlayer().hasPermission("storagesign.place"))
 		{
-			event.getPlayer().sendMessage(ChatColor.RED + this.getConfig().getString("no-permisson"));
+			event.getPlayer().sendMessage(ChatColor.RED + config.getString("no-permisson"));
 			event.setCancelled(true);
 			return;
 		}
@@ -353,7 +315,7 @@ public class StorageSignCore extends JavaPlugin implements Listener{
 		Sign sign = null;
 		StorageSign storageSign = null;
 
-		if(this.getConfig().getBoolean("auto-import"))
+		if(config.getBoolean("auto-import"))
 		{
 			if(event.getDestination().getHolder() instanceof Minecart);//何もしない
 			else if(event.getDestination().getHolder() instanceof DoubleChest)
@@ -379,7 +341,7 @@ public class StorageSignCore extends JavaPlugin implements Listener{
 						{
 							sign = (Sign) block.getState();
 							storageSign = new StorageSign(sign);
-							if(storageSign.getContents().isSimilar(event.getItem()))
+							if(storageSign.isSimilar(event.getItem()))
 							{
 								flag = true;
 								break importLoop;
@@ -389,7 +351,7 @@ public class StorageSignCore extends JavaPlugin implements Listener{
 						{
 							sign = (Sign) block.getState();
 							storageSign = new StorageSign(sign);
-							if(storageSign.getContents().isSimilar(event.getItem()))
+							if(storageSign.isSimilar(event.getItem()))
 							{
 								flag = true;
 								break importLoop;
@@ -402,7 +364,7 @@ public class StorageSignCore extends JavaPlugin implements Listener{
 		}
 
 		//搬出用にリセット
-		if(this.getConfig().getBoolean("auto-export"))
+		if(config.getBoolean("auto-export"))
 		{
 			blockInventory[0] = null;
 			blockInventory[1] = null;
@@ -431,7 +393,7 @@ public class StorageSignCore extends JavaPlugin implements Listener{
 						{
 							sign = (Sign) block.getState();
 							storageSign = new StorageSign(sign);
-							if(storageSign.getContents().isSimilar(event.getItem()))
+							if(storageSign.isSimilar(event.getItem()))
 							{
 								flag = true;
 								break exportLoop;
@@ -441,7 +403,7 @@ public class StorageSignCore extends JavaPlugin implements Listener{
 						{
 							sign = (Sign) block.getState();
 							storageSign = new StorageSign(sign);
-							if(storageSign.getContents().isSimilar(event.getItem()))
+							if(storageSign.isSimilar(event.getItem()))
 							{
 								flag = true;
 								break exportLoop;
@@ -482,7 +444,7 @@ public class StorageSignCore extends JavaPlugin implements Listener{
 	{
 		if(isStorageSign(event.getCurrentItem()) && !event.getWhoClicked().hasPermission("storagesign.craft"))
 		{
-			((CommandSender) event.getWhoClicked()).sendMessage(ChatColor.RED + this.getConfig().getString("no-permisson"));
+			((CommandSender) event.getWhoClicked()).sendMessage(ChatColor.RED + config.getString("no-permisson"));
 			event.setCancelled(true);
 			return;
 		}
@@ -491,7 +453,7 @@ public class StorageSignCore extends JavaPlugin implements Listener{
 	@EventHandler
 	public void onInventoryPickup(InventoryPickupItemEvent event)
 	{
-		if(event.isCancelled() || !this.getConfig().getBoolean("auto-import")) return;
+		if(event.isCancelled() || !config.getBoolean("auto-import")) return;
 
 		InventoryHolder holder = event.getInventory().getHolder();
 		if(holder instanceof BlockState)
@@ -509,7 +471,7 @@ public class StorageSignCore extends JavaPlugin implements Listener{
 				{
 					sign = (Sign) block.getState();
 					storageSign = new StorageSign(sign);
-					if(storageSign.getContents().isSimilar(event.getItem().getItemStack()))
+					if(storageSign.isSimilar(event.getItem().getItemStack()))
 					{
 						flag = true;
 						break;
@@ -519,7 +481,7 @@ public class StorageSignCore extends JavaPlugin implements Listener{
 				{
 					sign = (Sign) block.getState();
 					storageSign = new StorageSign(sign);
-					if(storageSign.getContents().isSimilar(event.getItem().getItemStack()))
+					if(storageSign.isSimilar(event.getItem().getItemStack()))
 					{
 						flag = true;
 						break;
@@ -533,14 +495,14 @@ public class StorageSignCore extends JavaPlugin implements Listener{
 	@EventHandler
 	public void onPlayerPickupItem(PlayerPickupItemEvent event)
 	{
-		if(event.isCancelled() || !this.getConfig().getBoolean("autocollect")) return;
+		if(event.isCancelled() || !config.getBoolean("autocollect")) return;
 		Player player = event.getPlayer();
 		ItemStack item = event.getItem().getItemStack();
 		//ここでは、エラーを出さずに無視する
 		if(!isStorageSign(player.getItemInHand()) || !player.hasPermission("storagesign.autocollect")) return;
 		StorageSign storagesign = new StorageSign(player.getItemInHand());
 		if(storagesign.getContents() == null) return;
-		if(storagesign.getContents().isSimilar(item) && player.getInventory().containsAtLeast(item, item.getMaxStackSize()) && storagesign.getStackSize() == 1)
+		if(storagesign.isSimilar(item) && player.getInventory().containsAtLeast(item, item.getMaxStackSize()) && storagesign.getStackSize() == 1)
 		{
 			storagesign.addAmount(item.getAmount());
 			player.getInventory().removeItem(item);
