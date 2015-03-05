@@ -1,4 +1,4 @@
-#StorageSign default config.yml
+#StorageSign Configuration
 no-permisson: You don't have permission
 
 manual-import: true
@@ -8,5 +8,5 @@ auto-export: true
 autocollect: true
 hardrecipe: false
 
-divide-limit: 34560
+divide-limit: 345600
 no-bud: false

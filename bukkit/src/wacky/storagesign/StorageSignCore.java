@@ -44,6 +44,10 @@ public class StorageSignCore extends JavaPlugin implements Listener{
 	public void onEnable()
 	{
 		config = this.getConfig();
+		config.options().copyDefaults(true);
+		config.options().header("StorageSign Configuration");
+		this.saveConfig();
+
 		ShapedRecipe storageSignRecipe = new ShapedRecipe(StorageSign.emptySign(1));
 		storageSignRecipe.shape("CCC","CSC","CHC");
 		storageSignRecipe.setIngredient('C', Material.CHEST);
@@ -51,9 +55,8 @@ public class StorageSignCore extends JavaPlugin implements Listener{
 		if(config.getBoolean("hardrecipe")) storageSignRecipe.setIngredient('H', Material.ENDER_CHEST);
 		else storageSignRecipe.setIngredient('H', Material.CHEST);
 		getServer().addRecipe(storageSignRecipe);
-		getServer().getPluginManager().registerEvents(this, this);
 
-		this.saveDefaultConfig();
+		getServer().getPluginManager().registerEvents(this, this);
 	}
 
 	public void onDisable(){}
@@ -279,7 +282,9 @@ public class StorageSignCore extends JavaPlugin implements Listener{
 		for(Location loc : breakSignMap.keySet())
 		{
 			StorageSign sign = breakSignMap.get(loc);
-			loc.getWorld().dropItemNaturally(loc, sign.getStorageSign());
+			Location loc2 = loc;
+			loc2.add(0.5, 0.5, 0.5);//中心にドロップさせる
+			loc.getWorld().dropItem(loc2, sign.getStorageSign());
 			loc.getBlock().setType(Material.AIR);
 		}
 	}
