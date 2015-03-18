@@ -46,7 +46,7 @@ public class StorageSign {
 
 
     protected Material getMaterial(String str) {
-        if (str.matches("EmptySign")) return Material.CHEST;
+        if (str.matches("EmptySign")) return Material.PORTAL;
         if (str.startsWith("REDSTONE_TORCH")) return Material.REDSTONE_TORCH_ON;
         if (str.startsWith("RS_COMPARATOR")) return Material.REDSTONE_COMPARATOR;
         if (str.startsWith("STAINGLASS_P")) return Material.STAINED_GLASS_PANE;
@@ -65,7 +65,7 @@ public class StorageSign {
 
     protected String getShortName() {
         if (mat == null || mat == Material.AIR) return "";
-        else if (mat == Material.CHEST) return "EmptySign";//1.6でバグるって報告あったので
+        else if (mat == Material.PORTAL) return "EmptySign";//1.6でバグるって報告あったので
         else if (!Bukkit.getBukkitVersion().startsWith("1.6") && mat == Material.STAINED_GLASS_PANE) return damage == 0 ? "STAINGLASS_PANE" : "STAINGLASS_P:" + damage;
         else if (mat == Material.REDSTONE_COMPARATOR) return "RS_COMPARATOR";
         else if (mat == Material.REDSTONE_TORCH_ON) return "REDSTONE_TORCH";
@@ -95,7 +95,7 @@ public class StorageSign {
         List<String> list = new ArrayList<String>();
         //IDとMaterial名が混ざってたり、エンチャ本対応したり
         if (isEmpty) list.add("Empty");
-        else if (mat == Material.CHEST) list.add("EmptySign " + amount);
+        else if (mat == Material.PORTAL) list.add("EmptySign " + amount);
         else if (extraData != 0) list.add(mat.toString() + ":" + damage + ":" + extraData + " " + amount);
         else if (damage != 0) list.add(mat.toString() + ":" + damage + " " + amount);
         else list.add(mat.toString() + " " + amount);
@@ -126,7 +126,7 @@ public class StorageSign {
 
     public ItemStack getContents() {
         if (mat == null) return null;
-        if (mat == Material.CHEST) return emptySign(1);
+        if (mat == Material.PORTAL) return emptySign(1);
         if (mat == Material.ENCHANTED_BOOK) {
             ItemStack item = new ItemStack(mat, 1);
             EnchantmentStorageMeta enchantMeta = (EnchantmentStorageMeta)item.getItemMeta();
