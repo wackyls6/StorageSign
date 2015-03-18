@@ -1,8 +1,8 @@
 package wacky.storagesign;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -37,7 +37,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.util.BlockIterator;
 
 public class StorageSignCore extends JavaPlugin implements Listener{
 
@@ -86,7 +85,7 @@ public class StorageSignCore extends JavaPlugin implements Listener{
         //手持ちがブロックだと叩いた看板を取得できないことがあるため
         if (event.isCancelled() && event.getAction() == Action.RIGHT_CLICK_AIR) {
             try {
-                block = getTargetBlock(player, 3);
+                block = player.getTargetBlock((Set) null, 3);
             } catch (IllegalStateException ex) {
                 return;
             }
@@ -384,15 +383,6 @@ public class StorageSignCore extends JavaPlugin implements Listener{
         }
         for (int i=0; i<4; i++) sign.setLine(i, storageSign.getSigntext(i));
         sign.update();
-    }
-    
-    private Block getTargetBlock(Player player, int maxDistance) {
-        Iterator<Block> itr = new BlockIterator(player, maxDistance);
-        Block block = null;
-        while (itr.hasNext()) {
-            block = itr.next();
-        }
-        return block;
     }
 
     @EventHandler
