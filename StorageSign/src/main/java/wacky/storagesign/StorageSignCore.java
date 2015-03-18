@@ -82,7 +82,7 @@ public class StorageSignCore extends JavaPlugin implements Listener{
     public void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
         Block block;
-        //手持ちがブロックだと叩いた看板を取得できないことがあるため
+        //手持ちがブロックだと叩いた看板を取得できないことがあるため(1.7まで)
         if (event.isCancelled() && event.getAction() == Action.RIGHT_CLICK_AIR) {
             try {
                 block = player.getTargetBlock((Set) null, 3);
@@ -112,7 +112,7 @@ public class StorageSignCore extends JavaPlugin implements Listener{
             if (storageSign.getMaterial() == null || storageSign.getMaterial() == Material.AIR) {
                 mat = itemInHand.getType();
                 if (mat == Material.AIR) return;
-                else if (isStorageSign(itemInHand)) storageSign.setMaterial(Material.CHEST);
+                else if (isStorageSign(itemInHand)) storageSign.setMaterial(Material.PORTAL);
                 else if (mat == Material.ENCHANTED_BOOK) {
                     EnchantmentStorageMeta enchantMeta = (EnchantmentStorageMeta)itemInHand.getItemMeta();
                     if(enchantMeta.getStoredEnchants().size() == 1) {
@@ -139,7 +139,7 @@ public class StorageSignCore extends JavaPlugin implements Listener{
                     itemSign.setAmount(0);
                     player.setItemInHand(itemSign.getStorageSign());
                 }//空看板収納
-                else if (itemSign.isEmpty() && storageSign.getMaterial() == Material.CHEST && config.getBoolean("manual-import")) {
+                else if (itemSign.isEmpty() && storageSign.getMaterial() == Material.PORTAL && config.getBoolean("manual-import")) {
                     storageSign.addAmount(itemSign.getStackSize());
                     player.getInventory().clear(player.getInventory().getHeldItemSlot());
                 }
