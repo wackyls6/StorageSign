@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -375,9 +374,18 @@ public class StorageSignCore extends JavaPlugin implements Listener{
         sign.update();
     }
 
-    private void exportSign(Sign sign, StorageSign storageSign, ItemStack item, Inventory inv, Inventory dest) {//1.7では問題なしみたい.(1.6ではスキマ送り)
+    private void exportSign(Sign sign, StorageSign storageSign, ItemStack item, Inventory inv, Inventory dest) {
         if (!inv.containsAtLeast(item, item.getMaxStackSize()) && storageSign.getAmount() >= item.getAmount()) {
-            if (Bukkit.getBukkitVersion().startsWith("1.6") && dest.firstEmpty() == -1) return;//対策
+        	int stacks = 0;
+        	int amount = 0;
+        	ItemStack[] contents = dest.getContents();
+        	for(int i=0; i< contents.length; i++){
+        		if(item.isSimilar(contents[i])){
+        			stacks++;
+        			amount += contents[i].getAmount();
+        		}
+        	}
+        	if(amount == stacks * item.getMaxStackSize() && dest.firstEmpty() == -1) return;
             inv.addItem(item);
             storageSign.addAmount(-item.getAmount());
         }

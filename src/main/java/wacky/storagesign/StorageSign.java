@@ -137,6 +137,7 @@ public class StorageSign {
         return new ItemStack(mat, 1, damage);
     }
 
+    //スタック可能か判定するやつ、最後の行だけでいいかもしれない
     public boolean isSimilar(ItemStack item) {
         if(item == null) return false;
         if (mat == Material.ENCHANTED_BOOK && item.getType() == Material.ENCHANTED_BOOK) {
