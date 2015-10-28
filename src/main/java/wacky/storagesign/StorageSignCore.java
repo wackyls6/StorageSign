@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.bukkit.ChatColor;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -22,7 +23,6 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.block.BlockPhysicsEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.inventory.CraftItemEvent;
@@ -57,6 +57,7 @@ public class StorageSignCore extends JavaPlugin implements Listener{
         getServer().addRecipe(storageSignRecipe);
 
         getServer().getPluginManager().registerEvents(this, this);
+        if(config.getBoolean("no-bud")) new SignPhysicsEvent(this);
     }
 
     @Override
@@ -92,6 +93,7 @@ public class StorageSignCore extends JavaPlugin implements Listener{
             block = event.getClickedBlock();
         }
         if (block == null) return;
+        if(player.getGameMode() == GameMode.SPECTATOR) return;
         if (event.getAction() == Action.RIGHT_CLICK_BLOCK || event.getAction() == Action.RIGHT_CLICK_AIR) {
 
             if (!isStorageSign(block)) return;
@@ -150,7 +152,7 @@ public class StorageSignCore extends JavaPlugin implements Listener{
 
                     int limit = config.getInt("divide-limit");
 
-                    if (limit > 0 && storageSign.getAmount() > limit * itemSign.getStackSize() + 1) itemSign.setAmount(limit);
+                    if (limit > 0 && storageSign.getAmount() > limit * (itemSign.getStackSize() + 1)) itemSign.setAmount(limit);
                     else itemSign.setAmount(storageSign.getAmount() / (itemSign.getStackSize() + 1));
                     player.setItemInHand(itemSign.getStorageSign());
                     storageSign.setAmount(storageSign.getAmount() - (itemSign.getStackSize() * itemSign.getAmount()));//余りは看板に引き受けてもらう
@@ -253,11 +255,6 @@ public class StorageSignCore extends JavaPlugin implements Listener{
             loc.getWorld().dropItem(loc2, sign.getStorageSign());
             loc.getBlock().setType(Material.AIR);
         }
-    }
-
-    @EventHandler
-    public void onBlockPhysics(BlockPhysicsEvent event) {
-        event.setCancelled(isStorageSign(event.getBlock()) && config.getBoolean("no-bud"));
     }
 
     @EventHandler
