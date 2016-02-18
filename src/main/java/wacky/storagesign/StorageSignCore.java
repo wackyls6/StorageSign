@@ -39,132 +39,147 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 public class StorageSignCore extends JavaPlugin implements Listener{
 
-    FileConfiguration config;
+	FileConfiguration config;
 
-    @Override
-    public void onEnable() {
-        config = this.getConfig();
-        config.options().copyDefaults(true);
-        config.options().header("StorageSign Configuration");
-        this.saveConfig();
+	@Override
+	public void onEnable() {
+		config = this.getConfig();
+		config.options().copyDefaults(true);
+		config.options().header("StorageSign Configuration");
+		this.saveConfig();
 
-        ShapedRecipe storageSignRecipe = new ShapedRecipe(StorageSign.emptySign(1));
-        storageSignRecipe.shape("CCC","CSC","CHC");
-        storageSignRecipe.setIngredient('C', Material.CHEST);
-        storageSignRecipe.setIngredient('S', Material.SIGN);
-        if (config.getBoolean("hardrecipe")) storageSignRecipe.setIngredient('H', Material.ENDER_CHEST);
-        else storageSignRecipe.setIngredient('H', Material.CHEST);
-        getServer().addRecipe(storageSignRecipe);
+		ShapedRecipe storageSignRecipe = new ShapedRecipe(StorageSign.emptySign());
+		storageSignRecipe.shape("CCC","CSC","CHC");
+		storageSignRecipe.setIngredient('C', Material.CHEST);
+		storageSignRecipe.setIngredient('S', Material.SIGN);
+		if (config.getBoolean("hardrecipe")) storageSignRecipe.setIngredient('H', Material.ENDER_CHEST);
+		else storageSignRecipe.setIngredient('H', Material.CHEST);
+		getServer().addRecipe(storageSignRecipe);
 
-        getServer().getPluginManager().registerEvents(this, this);
-        if(config.getBoolean("no-bud")) new SignPhysicsEvent(this);
-    }
+		getServer().getPluginManager().registerEvents(this, this);
+		if(config.getBoolean("no-bud")) new SignPhysicsEvent(this);
+	}
 
-    @Override
-    public void onDisable(){}
+	@Override
+	public void onDisable(){}
 
-    public boolean isStorageSign(ItemStack item) {
-        if (item.getType() != Material.SIGN) return false;
-        if (!item.getItemMeta().hasDisplayName()) return false;
-        if (!item.getItemMeta().getDisplayName().matches("StorageSign")) return false;
-        return item.getItemMeta().hasLore();
-    }
+	public boolean isStorageSign(ItemStack item) {
+		if (item.getType() != Material.SIGN) return false;
+		if (!item.getItemMeta().hasDisplayName()) return false;
+		if (!item.getItemMeta().getDisplayName().matches("StorageSign")) return false;
+		return item.getItemMeta().hasLore();
+	}
 
-    public boolean isStorageSign(Block block) {
-        if (block.getType() == Material.SIGN_POST || block.getType() == Material.WALL_SIGN) {
-            Sign sign = (Sign) block.getState();
-            if (sign.getLine(0).matches("StorageSign")) return true;
-        }
-        return false;
-    }
+	public boolean isStorageSign(Block block) {
+		if (block.getType() == Material.SIGN_POST || block.getType() == Material.WALL_SIGN) {
+			Sign sign = (Sign) block.getState();
+			if (sign.getLine(0).matches("StorageSign")) return true;
+		}
+		return false;
+	}
 
-    @EventHandler
-    public void onPlayerInteract(PlayerInteractEvent event) {
-        Player player = event.getPlayer();
-        Block block;
-        //手持ちがブロックだと叩いた看板を取得できないことがあるため
-        if (event.isCancelled() && event.getAction() == Action.RIGHT_CLICK_AIR) {
-            try {
-                block = player.getTargetBlock((Set) null, 3);
-            } catch (IllegalStateException ex) {
-                return;
-            }
-        } else {
-            block = event.getClickedBlock();
-        }
-        if (block == null) return;
-        if(player.getGameMode() == GameMode.SPECTATOR) return;
-        if (event.getAction() == Action.RIGHT_CLICK_BLOCK || event.getAction() == Action.RIGHT_CLICK_AIR) {
+	public boolean isHorseEgg(ItemStack item){
+		if(item.getType() != Material.MONSTER_EGG) return false;
+		if(item.getItemMeta().hasLore()) return true;
+		return false;
+	}
 
-            if (!isStorageSign(block)) return;
-            event.setUseItemInHand(Result.DENY);
-            event.setUseInteractedBlock(Result.DENY);
-            if (!player.hasPermission("storagesign.use")) {
-                player.sendMessage(ChatColor.RED + config.getString("no-permisson"));
-                event.setCancelled(true);
-                return;
-            }
-            Sign sign = (Sign) block.getState();
-            StorageSign storageSign = new StorageSign(sign);
-            ItemStack itemInHand = player.getItemInHand();
-            Material mat;
 
-            //アイテム登録
-            if (storageSign.getMaterial() == null || storageSign.getMaterial() == Material.AIR) {
-                mat = itemInHand.getType();
-                if (mat == Material.AIR) return;
-                else if (isStorageSign(itemInHand)) storageSign.setMaterial(Material.PORTAL);
-                else if (mat == Material.ENCHANTED_BOOK) {
-                    EnchantmentStorageMeta enchantMeta = (EnchantmentStorageMeta)itemInHand.getItemMeta();
-                    if(enchantMeta.getStoredEnchants().size() == 1) {
-                        Enchantment ench = enchantMeta.getStoredEnchants().keySet().toArray(new Enchantment[0])[0];
-                        storageSign.setMaterial(mat);
-                        storageSign.setDamage((short) ench.getId());
-                        storageSign.setExtraData((short) enchantMeta.getStoredEnchantLevel(ench));
-                    }
-                } else {
-                    storageSign.setMaterial(mat);
-                    storageSign.setDamage(itemInHand.getDurability());
-                }
+	@EventHandler
+	public void onPlayerInteract(PlayerInteractEvent event) {
+		Player player = event.getPlayer();
+		Block block;
+		//手持ちがブロックだと叩いた看板を取得できないことがあるとか
+		if (event.isCancelled() && event.getAction() == Action.RIGHT_CLICK_AIR) {
+			try {
+				block = player.getTargetBlock((Set) null, 3);
+			} catch (IllegalStateException ex) {
+				return;
+			}
+		} else {
+			block = event.getClickedBlock();
+		}
+		if (block == null) return;
+		if(player.getGameMode() == GameMode.SPECTATOR) return;
+		if (event.getAction() == Action.RIGHT_CLICK_BLOCK || event.getAction() == Action.RIGHT_CLICK_AIR) {
 
-                for (int i=0; i<4; i++) sign.setLine(i, storageSign.getSigntext(i));
-                sign.update();
-                return;
-            }
+			if (!isStorageSign(block)) return;
+			event.setUseItemInHand(Result.DENY);
+			event.setUseInteractedBlock(Result.DENY);
+			if (!player.hasPermission("storagesign.use")) {
+				player.sendMessage(ChatColor.RED + config.getString("no-permisson"));
+				event.setCancelled(true);
+				return;
+			}
+			Sign sign = (Sign) block.getState();
+			StorageSign storageSign = new StorageSign(sign);
+			ItemStack itemInHand = player.getItemInHand();
+			Material mat;
 
-            if (isStorageSign(itemInHand)) {
-                //看板合成
-                StorageSign itemSign = new StorageSign(itemInHand);
-                if (itemSign.getMaterial() == storageSign.getMaterial() && itemSign.getDamage() == storageSign.getDamage() && itemSign.getExtraData() == storageSign.getExtraData() && config.getBoolean("manual-import")) {
-                    storageSign.addAmount(itemSign.getAmount() * itemSign.getStackSize());
-                    itemSign.setAmount(0);
-                    player.setItemInHand(itemSign.getStorageSign());
-                }//空看板収納
-                else if (itemSign.isEmpty() && storageSign.getMaterial() == Material.PORTAL && config.getBoolean("manual-import")) {
-                    storageSign.addAmount(itemSign.getStackSize());
-                    player.getInventory().clear(player.getInventory().getHeldItemSlot());
-                }
-                //中身分割機能
-                else if (itemSign.isEmpty() && storageSign.getAmount() > itemInHand.getAmount() && config.getBoolean("manual-export")) {
-                    itemSign.setMaterial(storageSign.getMaterial());
-                    itemSign.setDamage(storageSign.getDamage());
-                    itemSign.setExtraData(storageSign.getExtraData());
+			//アイテム登録
+			if (storageSign.getMaterial() == null || storageSign.getMaterial() == Material.AIR) {
+				mat = itemInHand.getType();
+				if (mat == Material.AIR) return;
+				else if (isStorageSign(itemInHand)) storageSign.setMaterial(Material.PORTAL);
+				else if (isHorseEgg(itemInHand)){
+					storageSign.setMaterial(Material.PORTAL);
+					storageSign.setDamage((short) 1);
+				}else if (mat == Material.ENCHANTED_BOOK) {
+					EnchantmentStorageMeta enchantMeta = (EnchantmentStorageMeta)itemInHand.getItemMeta();
+					if(enchantMeta.getStoredEnchants().size() == 1) {
+						Enchantment ench = enchantMeta.getStoredEnchants().keySet().toArray(new Enchantment[0])[0];
+						storageSign.setMaterial(mat);
+						storageSign.setDamage((short) ench.getId());
+						storageSign.setExtraData((short) enchantMeta.getStoredEnchantLevel(ench));
+					}
+				} else {
+					storageSign.setMaterial(mat);
+					storageSign.setDamage(itemInHand.getDurability());
+				}
 
-                    int limit = config.getInt("divide-limit");
+				for (int i=0; i<4; i++) sign.setLine(i, storageSign.getSigntext(i));
+				sign.update();
+				return;
+			}
 
-                    if (limit > 0 && storageSign.getAmount() > limit * (itemSign.getStackSize() + 1)) itemSign.setAmount(limit);
-                    else itemSign.setAmount(storageSign.getAmount() / (itemSign.getStackSize() + 1));
-                    player.setItemInHand(itemSign.getStorageSign());
-                    storageSign.setAmount(storageSign.getAmount() - (itemSign.getStackSize() * itemSign.getAmount()));//余りは看板に引き受けてもらう
-                }
-                //看板記入を一気に
-                for (int i=0; i<4; i++) sign.setLine(i, storageSign.getSigntext(i));
-                sign.update();
-                return;
-            }
+			if (isStorageSign(itemInHand)) {
+				//看板合成
+				StorageSign itemSign = new StorageSign(itemInHand);
+				if (itemSign.getMaterial() == storageSign.getMaterial() && itemSign.getDamage() == storageSign.getDamage() && itemSign.getExtraData() == storageSign.getExtraData() && config.getBoolean("manual-import")) {
+					storageSign.addAmount(itemSign.getAmount() * itemSign.getStackSize());
+					itemSign.setAmount(0);
+					player.setItemInHand(itemSign.getStorageSign());
+				}//空看板収納
+				else if (itemSign.isEmpty() && storageSign.getMaterial() == Material.PORTAL && storageSign.getDamage() == 0 && config.getBoolean("manual-import")) {
+					if (player.isSneaking()) {
+						storageSign.addAmount(itemInHand.getAmount());
+						player.getInventory().clear(player.getInventory().getHeldItemSlot());
+					} else for (int i=0; i<player.getInventory().getSize(); i++) {
+						ItemStack item = player.getInventory().getItem(i);
+						if (storageSign.isSimilar(item)) {
+							storageSign.addAmount(item.getAmount());
+							player.getInventory().clear(i);
+						}
+					}
+				}//中身分割機能
+				else if (itemSign.isEmpty() && storageSign.getAmount() > itemInHand.getAmount() && config.getBoolean("manual-export")) {
+					itemSign.setMaterial(storageSign.getMaterial());
+					itemSign.setDamage(storageSign.getDamage());
+					itemSign.setExtraData(storageSign.getExtraData());
+
+					int limit = config.getInt("divide-limit");
+
+					if (limit > 0 && storageSign.getAmount() > limit * (itemSign.getStackSize() + 1)) itemSign.setAmount(limit);
+					else itemSign.setAmount(storageSign.getAmount() / (itemSign.getStackSize() + 1));
+					player.setItemInHand(itemSign.getStorageSign());
+					storageSign.setAmount(storageSign.getAmount() - (itemSign.getStackSize() * itemSign.getAmount()));//余りは看板に引き受けてもらう
+				}
+				for (int i=0; i<4; i++) sign.setLine(i, storageSign.getSigntext(i));
+				sign.update();
+				return;
+			}
 
             //ここから搬入
-            mat = storageSign.getMaterial();//使い回しｗ
             if (storageSign.isSimilar(itemInHand)) {
                 if (!config.getBoolean("manual-import")) return;
                 if (player.isSneaking()) {
@@ -269,6 +284,7 @@ public class StorageSignCore extends JavaPlugin implements Listener{
         Sign sign = (Sign)event.getBlock().getState();
         for (int i=0; i<4; i++) sign.setLine(i, storageSign.getSigntext(i));
         sign.update();
+        event.getPlayer().closeInventory();
     }
 
     @EventHandler

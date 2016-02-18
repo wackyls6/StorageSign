@@ -9,6 +9,7 @@ public class SignPhysicsEvent implements Listener {
 	StorageSignCore plugin;
 
     public SignPhysicsEvent(StorageSignCore plugin) {
+    	this.plugin = plugin;
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
 	}
 

@@ -1,6 +1,6 @@
 name: StorageSign
 main: wacky.storagesign.StorageSignCore
-version: 1.1.9
+version: 1.2.1
 author: wackyls6
 softdepend: [WorldGuard]
 website: http://forum.minecraftuser.jp/viewtopic.php?t=15065
@@ -30,5 +30,5 @@ permissions:
         description: Allows you to create a storagesign
         default: op
     storagesign.autocollect:
-        description: Collect items you picked
+        description: Collect your picked items
         default: true

@@ -46,7 +46,12 @@ public class StorageSign {
 
 
     protected Material getMaterial(String str) {
+    	//後ろのせいで判別不能なアイテムたち
         if (str.matches("EmptySign")) return Material.PORTAL;
+        if (str.matches("HorseEgg")){
+        	damage = 1;
+        	return Material.PORTAL;
+        }
         if (str.startsWith("REDSTONE_TORCH")) return Material.REDSTONE_TORCH_ON;
         if (str.startsWith("RS_COMPARATOR")) return Material.REDSTONE_COMPARATOR;
         if (str.startsWith("STAINGLASS_P")) return Material.STAINED_GLASS_PANE;
@@ -55,7 +60,7 @@ public class StorageSign {
         if (str.startsWith("ENCHBOOK")) return Material.ENCHANTED_BOOK;
 
         Material mat = Material.matchMaterial(str);
-        if (mat == null) { //看板の文字数制限に対応
+        if (mat == null) { //後ろ切れる程度なら対応可
             for (Material m : Material.values()) {
                 if(m.toString().startsWith(str)) return m;
             }
@@ -65,7 +70,11 @@ public class StorageSign {
 
     protected String getShortName() {
         if (mat == null || mat == Material.AIR) return "";
-        else if (mat == Material.PORTAL) return "EmptySign";//1.6でバグるって報告あったので
+        else if (mat == Material.PORTAL){
+        	if(damage == 0) return "EmptySign";
+        	if(damage == 1) return "HorseEgg";
+        }
+        //1.6でバグるって報告あったので
         else if (!Bukkit.getBukkitVersion().startsWith("1.6") && mat == Material.STAINED_GLASS_PANE) return damage == 0 ? "STAINGLASS_PANE" : "STAINGLASS_P:" + damage;
         else if (mat == Material.REDSTONE_COMPARATOR) return "RS_COMPARATOR";
         else if (mat == Material.REDSTONE_TORCH_ON) return "REDSTONE_TORCH";
@@ -89,13 +98,15 @@ public class StorageSign {
 
     public ItemStack getStorageSign() {
         ItemStack item = new ItemStack(Material.SIGN, stack);
-        item.getItemMeta();
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName("StorageSign");
         List<String> list = new ArrayList<String>();
         //IDとMaterial名が混ざってたり、エンチャ本対応したり
         if (isEmpty) list.add("Empty");
-        else if (mat == Material.PORTAL) list.add("EmptySign " + amount);
+        else if (mat == Material.PORTAL){
+        	if(damage == 0) list.add("EmptySign " + amount);
+        	if(damage == 1) list.add("HorseEgg " + amount);
+        }
         else if (extraData != 0) list.add(mat.toString() + ":" + damage + ":" + extraData + " " + amount);
         else if (damage != 0) list.add(mat.toString() + ":" + damage + " " + amount);
         else list.add(mat.toString() + " " + amount);
@@ -104,8 +115,8 @@ public class StorageSign {
         return item;
     }
 
-    public static ItemStack emptySign(int amount) {
-        ItemStack emptySign = new ItemStack(Material.SIGN, amount);
+    public static ItemStack emptySign() {
+        ItemStack emptySign = new ItemStack(Material.SIGN);
         ItemMeta meta = emptySign.getItemMeta();
         List<String> list = new ArrayList<String>();
         meta.setDisplayName("StorageSign");
@@ -114,6 +125,17 @@ public class StorageSign {
         emptySign.setItemMeta(meta);
         return emptySign;
     }
+
+    private ItemStack emptyHorseEgg() {
+        ItemStack emptyHorseEgg = new ItemStack(Material.MONSTER_EGG);
+        ItemMeta meta = emptyHorseEgg.getItemMeta();
+        List<String> list = new ArrayList<String>();
+        meta.setDisplayName("HorseEgg");
+        list.add("Empty");
+        meta.setLore(list);
+        emptyHorseEgg.setItemMeta(meta);
+        return emptyHorseEgg;
+	}
 
     public String getSigntext(int i) {
         String[] sign = new String[4];
@@ -126,7 +148,10 @@ public class StorageSign {
 
     public ItemStack getContents() {
         if (mat == null) return null;
-        if (mat == Material.PORTAL) return emptySign(1);
+        if (mat == Material.PORTAL){
+        	if(damage == 0) return emptySign();
+        	if(damage == 1) return emptyHorseEgg();
+        }
         if (mat == Material.ENCHANTED_BOOK) {
             ItemStack item = new ItemStack(mat, 1);
             EnchantmentStorageMeta enchantMeta = (EnchantmentStorageMeta)item.getItemMeta();
@@ -137,7 +162,7 @@ public class StorageSign {
         return new ItemStack(mat, 1, damage);
     }
 
-    //スタック可能か判定するやつ、最後の行だけでいいかもしれない
+	//スタック可能か判定するやつ、最後の行だけでいいかもしれない
     public boolean isSimilar(ItemStack item) {
         if(item == null) return false;
         if (mat == Material.ENCHANTED_BOOK && item.getType() == Material.ENCHANTED_BOOK) {
