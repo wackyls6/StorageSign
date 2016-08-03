@@ -2,34 +2,45 @@ package wacky.storagesign;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.block.Sign;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.PotionMeta;
+import org.bukkit.potion.PotionData;
+import org.bukkit.potion.PotionType;
 import org.bukkit.util.NumberConversions;
 
 public class StorageSign {
 
     protected Material mat;
     protected short damage;
-    protected short extraData;
+    protected Enchantment ench;
+    protected PotionType pot;
     protected int amount;
     protected int stack;
     protected boolean isEmpty;
     //StorageSignだと確認してから使っちくりー
     public StorageSign(ItemStack item) {
-        String[] str = item.getItemMeta().getLore().get(0).split(" ");
-        if(str[0].matches("Empty")) isEmpty = true;
-        else {
-            mat = getMaterial(str[0].split(":")[0]);
-            if(str[0].contains(":")) damage = NumberConversions.toShort(str[0].split(":")[1]);
-            if(mat == Material.ENCHANTED_BOOK) extraData = NumberConversions.toShort(str[0].split(":")[2]);
-            amount = NumberConversions.toInt(str[1]);
-        }
-        stack = item.getAmount();
+    	String[] str = item.getItemMeta().getLore().get(0).split(" ");
+    	if(str[0].matches("Empty")) isEmpty = true;
+    	else {
+    		mat = getMaterial(str[0].split(":")[0]);
+    		if(mat == Material.ENCHANTED_BOOK){
+    			damage = NumberConversions.toShort(str[0].split(":")[2]);
+    			ench = Enchantment.getByName(str[0].split(":")[1]);
+    		}
+    		else if(mat == Material.POTION || mat == Material.SPLASH_POTION || mat == Material.LINGERING_POTION){
+    			PotionInfo pi = new PotionInfo(mat, str[0].split(":"));
+    			mat = pi.getMaterial();
+    			damage = pi.getDamage();
+    			pot = pi.getPotionType();
+    		}else if(str[0].contains(":")) damage = NumberConversions.toShort(str[0].split(":")[1]);
+    		amount = NumberConversions.toInt(str[1]);
+    	}
+    	stack = item.getAmount();
     }
 
     //Sto(ry
@@ -37,15 +48,23 @@ public class StorageSign {
         String[] line2 = sign.getLine(1).trim().split(":");
         mat = getMaterial(line2[0]);
         isEmpty = mat == null || mat == Material.AIR;
-        if(line2.length >= 2) damage = NumberConversions.toShort(line2[1]);
-        if(line2.length == 3) extraData = NumberConversions.toShort(line2[2]);
+        if(line2.length == 2) damage = NumberConversions.toShort(line2[1]);
+        if(mat == Material.ENCHANTED_BOOK){
+        	damage = NumberConversions.toShort(line2[2]);
+        	ench = Enchantment.getById(NumberConversions.toInt(line2[1]));
+        }
+        else if(mat == Material.POTION || mat == Material.SPLASH_POTION || mat == Material.LINGERING_POTION){
+			PotionInfo pi = new PotionInfo(mat, line2);
+			mat = pi.getMaterial();
+			damage = pi.getDamage();
+			pot = pi.getPotionType();
+        }
         amount = NumberConversions.toInt(sign.getLine(2));
         isEmpty = amount == 0;
         stack = 1;
     }
 
-
-    protected Material getMaterial(String str) {
+	protected Material getMaterial(String str) {
     	//後ろのせいで判別不能なアイテムたち
         if (str.matches("EmptySign")) return Material.PORTAL;
         if (str.matches("HorseEgg")){
@@ -58,6 +77,8 @@ public class StorageSign {
         if (str.startsWith("BROWN_MUSH_B")) return Material.HUGE_MUSHROOM_1;
         if (str.startsWith("RED_MUSH_BLO")) return Material.HUGE_MUSHROOM_2;
         if (str.startsWith("ENCHBOOK")) return Material.ENCHANTED_BOOK;
+        if (str.startsWith("SPOTION")) return Material.SPLASH_POTION;
+        if (str.startsWith("LPOTION")) return Material.LINGERING_POTION;
 
         Material mat = Material.matchMaterial(str);
         if (mat == null) { //後ろ切れる程度なら対応可
@@ -68,29 +89,34 @@ public class StorageSign {
         return mat;//nullなら空.
     }
 
-    protected String getShortName() {
+    protected String getShortName() {//看板用15文字以内
         if (mat == null || mat == Material.AIR) return "";
         else if (mat == Material.PORTAL){
         	if(damage == 0) return "EmptySign";
         	if(damage == 1) return "HorseEgg";
         }
-        //1.6でバグるって報告あったので
-        else if (!Bukkit.getBukkitVersion().startsWith("1.6") && mat == Material.STAINED_GLASS_PANE) return damage == 0 ? "STAINGLASS_PANE" : "STAINGLASS_P:" + damage;
+        else if (mat == Material.STAINED_GLASS_PANE) return damage == 0 ? "STAINGLASS_PANE" : "STAINGLASS_P:" + damage;
         else if (mat == Material.REDSTONE_COMPARATOR) return "RS_COMPARATOR";
         else if (mat == Material.REDSTONE_TORCH_ON) return "REDSTONE_TORCH";
         else if (mat == Material.HUGE_MUSHROOM_1) return damage == 0 ? "BROWN_MUSH_BLOC" : "BROWN_MUSH_B:" + damage;
         else if (mat == Material.HUGE_MUSHROOM_2) return damage == 0 ? "RED_MUSH_BLOCK" : "RED_MUSH_BLO:" + damage;
-        else if (mat == Material.ENCHANTED_BOOK) return "ENCHBOOK:" + damage + ":" + extraData;
+        else if (mat == Material.ENCHANTED_BOOK) return "ENCHBOOK:" + ench.getId() + ":" + damage;
+
+        else if (mat == Material.POTION || mat == Material.SPLASH_POTION || mat == Material.LINGERING_POTION)
+        {
+        	String prefix = "";
+        	if(mat == Material.SPLASH_POTION) prefix = "S";
+        	else if(mat == Material.LINGERING_POTION) prefix = "L";
+
+        	return prefix + "POTION:" + PotionInfo.getShortType(pot) +":" + damage;
+        }
 
         int limit = 15;
-        if (extraData != 0) limit -= String.valueOf(extraData).length() + 1;
-        if (damage != 0 || extraData != 0) limit -= String.valueOf(damage).length() + 1;
+        if (damage != 0) limit -= String.valueOf(damage).length() + 1;
         if (mat.toString().length() > limit) {
-            if (extraData != 0) return mat.toString().substring(0, limit) + ":" + damage + ":" + extraData;
             if (damage != 0) return mat.toString().substring(0, limit) + ":" + damage;
             return mat.toString().substring(0, limit);
         } else {
-            if (extraData != 0) return mat.toString() + ":" + damage + ":" + extraData;
             if (damage != 0) return mat.toString() + ":" + damage;
             return mat.toString();
         }
@@ -107,7 +133,10 @@ public class StorageSign {
         	if(damage == 0) list.add("EmptySign " + amount);
         	if(damage == 1) list.add("HorseEgg " + amount);
         }
-        else if (extraData != 0) list.add(mat.toString() + ":" + damage + ":" + extraData + " " + amount);
+        else if (mat == Material.ENCHANTED_BOOK) list.add(mat.toString() + ":" + ench.getName() + ":" + damage + " " + amount);
+        else if (mat == Material.POTION || mat == Material.SPLASH_POTION || mat == Material.LINGERING_POTION){
+        	list.add(mat.toString() + ":" + pot.toString() + ":" + damage + " " + amount);
+        }
         else if (damage != 0) list.add(mat.toString() + ":" + damage + " " + amount);
         else list.add(mat.toString() + " " + amount);
         meta.setLore(list);
@@ -155,22 +184,29 @@ public class StorageSign {
         if (mat == Material.ENCHANTED_BOOK) {
             ItemStack item = new ItemStack(mat, 1);
             EnchantmentStorageMeta enchantMeta = (EnchantmentStorageMeta)item.getItemMeta();
-            enchantMeta.addStoredEnchant(Enchantment.getById(damage), extraData, true);
+            enchantMeta.addStoredEnchant(ench, damage, true);
             item.setItemMeta(enchantMeta);
+            return item;
+        }
+        else if(mat == Material.POTION || mat == Material.SPLASH_POTION || mat == Material.LINGERING_POTION){
+        	ItemStack item = new ItemStack(mat, 1);
+        	PotionMeta potionMeta = (PotionMeta)item.getItemMeta();
+        	potionMeta.setBasePotionData(new PotionData(pot, damage == 1, damage == 2));
+            item.setItemMeta(potionMeta);
             return item;
         }
         return new ItemStack(mat, 1, damage);
     }
 
-	//スタック可能か判定するやつ、最後の行だけでいいかもしれない
+	//回収可能か判定、エンチャ本は本自身の合成回数を問わない
     public boolean isSimilar(ItemStack item) {
         if(item == null) return false;
         if (mat == Material.ENCHANTED_BOOK && item.getType() == Material.ENCHANTED_BOOK) {
             EnchantmentStorageMeta enchantMeta = (EnchantmentStorageMeta)item.getItemMeta();
             if(enchantMeta.getStoredEnchants().size() == 1)
             {
-                Enchantment ench = enchantMeta.getStoredEnchants().keySet().toArray(new Enchantment[0])[0];
-                if (ench.getId() == damage && enchantMeta.getStoredEnchantLevel(ench) == extraData) return true;
+                Enchantment itemEnch = enchantMeta.getStoredEnchants().keySet().toArray(new Enchantment[0])[0];
+                if (itemEnch == ench && enchantMeta.getStoredEnchantLevel(itemEnch) == damage) return true;
             }
             return false;
         }
@@ -190,14 +226,6 @@ public class StorageSign {
 
     public void setDamage(short damage) {
         this.damage = damage;
-    }
-
-    public short getExtraData() {
-        return extraData;
-    }
-
-    public void setExtraData(short extraData) {
-        this.extraData = extraData;
     }
 
     public int getAmount() {
@@ -223,4 +251,20 @@ public class StorageSign {
     public boolean isEmpty() {
         return isEmpty;
     }
+
+	public void setEnchant(Enchantment ench) {
+		this.ench = ench;
+	}
+
+	public Enchantment getEnchant() {
+		return ench;
+	}
+
+	public void setPotion(PotionType pot) {
+		this.pot = pot;
+	}
+
+	public PotionType getPotion() {
+		return pot;
+	}
 }

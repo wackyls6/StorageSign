@@ -8,6 +8,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.DoubleChest;
@@ -30,12 +31,16 @@ import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.event.inventory.InventoryPickupItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerPickupItemEvent;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.meta.EnchantmentStorageMeta;
+import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.potion.PotionData;
 
 public class StorageSignCore extends JavaPlugin implements Listener{
 
@@ -64,6 +69,7 @@ public class StorageSignCore extends JavaPlugin implements Listener{
 	public void onDisable(){}
 
 	public boolean isStorageSign(ItemStack item) {
+		if (item == null) return false;
 		if (item.getType() != Material.SIGN) return false;
 		if (!item.getItemMeta().hasDisplayName()) return false;
 		if (!item.getItemMeta().getDisplayName().matches("StorageSign")) return false;
@@ -104,6 +110,7 @@ public class StorageSignCore extends JavaPlugin implements Listener{
 		if (event.getAction() == Action.RIGHT_CLICK_BLOCK || event.getAction() == Action.RIGHT_CLICK_AIR) {
 
 			if (!isStorageSign(block)) return;
+			if(event.getHand() == EquipmentSlot.OFF_HAND) return;//一応
 			event.setUseItemInHand(Result.DENY);
 			event.setUseInteractedBlock(Result.DENY);
 			if (!player.hasPermission("storagesign.use")) {
@@ -113,28 +120,42 @@ public class StorageSignCore extends JavaPlugin implements Listener{
 			}
 			Sign sign = (Sign) block.getState();
 			StorageSign storageSign = new StorageSign(sign);
-			ItemStack itemInHand = player.getItemInHand();
+			ItemStack itemMainHand = event.getItem();
 			Material mat;
+
 
 			//アイテム登録
 			if (storageSign.getMaterial() == null || storageSign.getMaterial() == Material.AIR) {
-				mat = itemInHand.getType();
+				mat = itemMainHand.getType();
 				if (mat == Material.AIR) return;
-				else if (isStorageSign(itemInHand)) storageSign.setMaterial(Material.PORTAL);
-				else if (isHorseEgg(itemInHand)){
+				else if (isStorageSign(itemMainHand)) storageSign.setMaterial(Material.PORTAL);
+				else if (isHorseEgg(itemMainHand)){
 					storageSign.setMaterial(Material.PORTAL);
 					storageSign.setDamage((short) 1);
-				}else if (mat == Material.ENCHANTED_BOOK) {
-					EnchantmentStorageMeta enchantMeta = (EnchantmentStorageMeta)itemInHand.getItemMeta();
+				}
+				else if (mat == Material.POTION || mat == Material.SPLASH_POTION || mat == Material.LINGERING_POTION)
+				{
+					storageSign.setMaterial(mat);
+					PotionMeta potionMeta = (PotionMeta)itemMainHand.getItemMeta();
+					PotionData potion = potionMeta.getBasePotionData();
+					if(potion.isExtended()) storageSign.setDamage((short) 1);
+					if(potion.isUpgraded()) storageSign.setDamage((short) 2);
+					storageSign.setPotion(potion.getType());
+				}
+				else if (mat == Material.ENCHANTED_BOOK)
+				{
+					EnchantmentStorageMeta enchantMeta = (EnchantmentStorageMeta)itemMainHand.getItemMeta();
 					if(enchantMeta.getStoredEnchants().size() == 1) {
 						Enchantment ench = enchantMeta.getStoredEnchants().keySet().toArray(new Enchantment[0])[0];
 						storageSign.setMaterial(mat);
-						storageSign.setDamage((short) ench.getId());
-						storageSign.setExtraData((short) enchantMeta.getStoredEnchantLevel(ench));
+						storageSign.setDamage((short) enchantMeta.getStoredEnchantLevel(ench));
+						storageSign.setEnchant(ench);
 					}
-				} else {
+				}
+				else
+				{
 					storageSign.setMaterial(mat);
-					storageSign.setDamage(itemInHand.getDurability());
+					storageSign.setDamage(itemMainHand.getDurability());
 				}
 
 				for (int i=0; i<4; i++) sign.setLine(i, storageSign.getSigntext(i));
@@ -142,17 +163,17 @@ public class StorageSignCore extends JavaPlugin implements Listener{
 				return;
 			}
 
-			if (isStorageSign(itemInHand)) {
+			if (isStorageSign(itemMainHand)) {
 				//看板合成
-				StorageSign itemSign = new StorageSign(itemInHand);
-				if (itemSign.getMaterial() == storageSign.getMaterial() && itemSign.getDamage() == storageSign.getDamage() && itemSign.getExtraData() == storageSign.getExtraData() && config.getBoolean("manual-import")) {
+				StorageSign itemSign = new StorageSign(itemMainHand);
+				if (storageSign.getContents().isSimilar(itemSign.getContents()) && config.getBoolean("manual-import")) {
 					storageSign.addAmount(itemSign.getAmount() * itemSign.getStackSize());
 					itemSign.setAmount(0);
-					player.setItemInHand(itemSign.getStorageSign());
+					player.getInventory().setItemInMainHand(itemSign.getStorageSign());
 				}//空看板収納
 				else if (itemSign.isEmpty() && storageSign.getMaterial() == Material.PORTAL && storageSign.getDamage() == 0 && config.getBoolean("manual-import")) {
 					if (player.isSneaking()) {
-						storageSign.addAmount(itemInHand.getAmount());
+						storageSign.addAmount(itemMainHand.getAmount());
 						player.getInventory().clear(player.getInventory().getHeldItemSlot());
 					} else for (int i=0; i<player.getInventory().getSize(); i++) {
 						ItemStack item = player.getInventory().getItem(i);
@@ -162,16 +183,17 @@ public class StorageSignCore extends JavaPlugin implements Listener{
 						}
 					}
 				}//中身分割機能
-				else if (itemSign.isEmpty() && storageSign.getAmount() > itemInHand.getAmount() && config.getBoolean("manual-export")) {
+				else if (itemSign.isEmpty() && storageSign.getAmount() > itemMainHand.getAmount() && config.getBoolean("manual-export")) {
 					itemSign.setMaterial(storageSign.getMaterial());
 					itemSign.setDamage(storageSign.getDamage());
-					itemSign.setExtraData(storageSign.getExtraData());
+					itemSign.setEnchant(storageSign.getEnchant());
+					itemSign.setPotion(storageSign.getPotion());
 
 					int limit = config.getInt("divide-limit");
 
 					if (limit > 0 && storageSign.getAmount() > limit * (itemSign.getStackSize() + 1)) itemSign.setAmount(limit);
 					else itemSign.setAmount(storageSign.getAmount() / (itemSign.getStackSize() + 1));
-					player.setItemInHand(itemSign.getStorageSign());
+					player.getInventory().setItemInMainHand(itemSign.getStorageSign());
 					storageSign.setAmount(storageSign.getAmount() - (itemSign.getStackSize() * itemSign.getAmount()));//余りは看板に引き受けてもらう
 				}
 				for (int i=0; i<4; i++) sign.setLine(i, storageSign.getSigntext(i));
@@ -180,10 +202,10 @@ public class StorageSignCore extends JavaPlugin implements Listener{
 			}
 
             //ここから搬入
-            if (storageSign.isSimilar(itemInHand)) {
+            if (storageSign.isSimilar(itemMainHand)) {
                 if (!config.getBoolean("manual-import")) return;
                 if (player.isSneaking()) {
-                    storageSign.addAmount(itemInHand.getAmount());
+                    storageSign.addAmount(itemMainHand.getAmount());
                     player.getInventory().clear(player.getInventory().getHeldItemSlot());
                 } else for (int i=0; i<player.getInventory().getSize(); i++) {
                     ItemStack item = player.getInventory().getItem(i);
@@ -452,15 +474,40 @@ public class StorageSignCore extends JavaPlugin implements Listener{
     public void onPlayerPickupItem(PlayerPickupItemEvent event) {
         if (event.isCancelled() || !config.getBoolean("autocollect")) return;
         Player player = event.getPlayer();
+        PlayerInventory playerInv = player.getInventory();
         ItemStack item = event.getItem().getItemStack();
+        StorageSign storagesign = null;
         //ここでは、エラーを出さずに無視する
-        if (!isStorageSign(player.getItemInHand()) || !player.hasPermission("storagesign.autocollect")) return;
-        StorageSign storagesign = new StorageSign(player.getItemInHand());
-        if (storagesign.getContents() == null) return;
-        if (storagesign.isSimilar(item) && player.getInventory().containsAtLeast(item, item.getMaxStackSize()) && storagesign.getStackSize() == 1) {
-            storagesign.addAmount(item.getAmount());
-            player.getInventory().removeItem(item);
-            player.setItemInHand(storagesign.getStorageSign());
+        if(!player.hasPermission("storagesign.autocollect")) return;
+        if(isStorageSign(playerInv.getItemInMainHand())){
+        	storagesign = new StorageSign(playerInv.getItemInMainHand());
+        	if(storagesign.getContents() != null){
+
+        		if (storagesign.isSimilar(item) && playerInv.containsAtLeast(item, item.getMaxStackSize()) && storagesign.getStackSize() == 1) {
+        			storagesign.addAmount(item.getAmount());
+
+        			//playerInv.removeItem(item);1.9ではバグる
+        			playerInv.setItemInMainHand(storagesign.getStorageSign());
+        			event.getItem().remove();
+        			player.playSound(player.getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.6f, 1.5f);
+        			event.setCancelled(true);
+        			return;
+        		}
+        	}
+        }if(isStorageSign(playerInv.getItemInOffHand())){//メインハンドで回収されなかった時
+        	storagesign = new StorageSign(playerInv.getItemInOffHand());
+        	if(storagesign.getContents() != null){
+
+        		if (storagesign.isSimilar(item) && playerInv.containsAtLeast(item, item.getMaxStackSize()) && storagesign.getStackSize() == 1) {
+        			storagesign.addAmount(item.getAmount());
+        			//playerInv.removeItem(item);
+        			playerInv.setItemInOffHand(storagesign.getStorageSign());
+        			event.getItem().remove();
+        			player.playSound(player.getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.6f, 1.5f);
+        			event.setCancelled(true);
+        			return;
+        		}
+        	}
         }
     }
 }

@@ -38,13 +38,22 @@
                     <encoding>${project.build.sourceEncoding}</encoding>
                 </configuration>
             </plugin>
+            <plugin>
+            	<groupId>org.spigotmc</groupId>
+            	<artifactId>spigot-api</artifactId>
+            	<version>1.9.4-R0.1-SNAPSHOT</version>
+            </plugin>
+            <plugin>
+            	<groupId>org.spigotmc</groupId>
+            	<artifactId>spigot-api</artifactId>
+            </plugin>
         </plugins>
     </build>
     <dependencies>
         <dependency>
             <groupId>org.spigotmc</groupId>
             <artifactId>spigot-api</artifactId>
-            <version>1.8.3-R0.1-SNAPSHOT</version>
+            <version>1.9.4-R0.1-SNAPSHOT</version>
             <type>jar</type>
         </dependency>
     </dependencies>
