@@ -8,7 +8,6 @@ import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.DoubleChest;
@@ -486,11 +485,12 @@ public class StorageSignCore extends JavaPlugin implements Listener{
         		if (storagesign.isSimilar(item) && playerInv.containsAtLeast(item, item.getMaxStackSize()) && storagesign.getStackSize() == 1) {
         			storagesign.addAmount(item.getAmount());
 
-        			//playerInv.removeItem(item);1.9ではバグる
+        			playerInv.removeItem(item);//1.9,10ではバグる？
         			playerInv.setItemInMainHand(storagesign.getStorageSign());
-        			event.getItem().remove();
-        			player.playSound(player.getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.6f, 1.5f);
-        			event.setCancelled(true);
+        			player.updateInventory();
+        			//event.getItem().remove();
+        			//player.playSound(player.getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.6f, 1.5f);
+        			//event.setCancelled(true);
         			return;
         		}
         	}
@@ -500,11 +500,12 @@ public class StorageSignCore extends JavaPlugin implements Listener{
 
         		if (storagesign.isSimilar(item) && playerInv.containsAtLeast(item, item.getMaxStackSize()) && storagesign.getStackSize() == 1) {
         			storagesign.addAmount(item.getAmount());
-        			//playerInv.removeItem(item);
+        			playerInv.removeItem(item);
         			playerInv.setItemInOffHand(storagesign.getStorageSign());
-        			event.getItem().remove();
-        			player.playSound(player.getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.6f, 1.5f);
-        			event.setCancelled(true);
+        			player.updateInventory();
+        			//event.getItem().remove();
+        			//player.playSound(player.getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.6f, 1.5f);
+        			//event.setCancelled(true);
         			return;
         		}
         	}

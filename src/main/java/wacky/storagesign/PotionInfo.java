@@ -8,18 +8,13 @@ public class PotionInfo {
 
 	protected Material mat;
 	protected PotionType pot;
-	protected short damage;
+	protected short damage =0;
 
 	public PotionInfo(Material mat, String[] str){
 		this.mat = mat;
 		if(str.length == 2){//ダメージ値
 			short old = NumberConversions.toShort(str[1]);
-			if(old == 0){//文字列
-				pot = getType(str[1].substring(0, 6));
-				damage = NumberConversions.toShort(str[1].charAt(6));
-				return;
-			}
-			if(old > 16384) this.mat = Material.SPLASH_POTION;
+			if(old >= 16384) this.mat = Material.SPLASH_POTION;
 			switch(old % 32){
 			case 1:
 				pot = PotionType.REGEN;
@@ -47,11 +42,19 @@ public class PotionInfo {
 				pot = PotionType.WATER_BREATHING;
 			case 14:
 				pot = PotionType.INVISIBILITY;
+			case 16:
+				pot = PotionType.AWKWARD;
 			}
-			if(old % 8192 > 64) damage = 1;
-			else if(old % 8192 > 32) damage = 2;
+			if(old ==  0) pot = PotionType.WATER;
+			if(old == 32) pot = PotionType.THICK;
+			if(old == 64 || old == 8192 || old == 16384) pot = PotionType.MUNDANE;
 
-		}else{
+			if(old % 8192 >= 64) damage = 1;//延長
+			else if(old % 8192 > 32) damage = 2;//強化
+
+		}else if(str.length == 1) pot = PotionType.WATER;
+
+		else{
 			pot = getType(str[1]);
 			damage = NumberConversions.toShort(str[2]);
 		}
