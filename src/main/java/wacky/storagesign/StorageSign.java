@@ -126,7 +126,7 @@ public class StorageSign {
         ItemStack item = new ItemStack(Material.SIGN, stack);
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName("StorageSign");
-        List<String> list = new ArrayList<String>();
+        List<String> list = new ArrayList<>();
         //IDとMaterial名が混ざってたり、エンチャ本対応したり
         if (isEmpty) list.add("Empty");
         else if (mat == Material.PORTAL){
@@ -147,7 +147,7 @@ public class StorageSign {
     public static ItemStack emptySign() {
         ItemStack emptySign = new ItemStack(Material.SIGN);
         ItemMeta meta = emptySign.getItemMeta();
-        List<String> list = new ArrayList<String>();
+        List<String> list = new ArrayList<>();
         meta.setDisplayName("StorageSign");
         list.add("Empty");
         meta.setLore(list);
@@ -158,7 +158,7 @@ public class StorageSign {
     private ItemStack emptyHorseEgg() {
         ItemStack emptyHorseEgg = new ItemStack(Material.MONSTER_EGG);
         ItemMeta meta = emptyHorseEgg.getItemMeta();
-        List<String> list = new ArrayList<String>();
+        List<String> list = new ArrayList<>();
         meta.setDisplayName("HorseEgg");
         list.add("Empty");
         meta.setLore(list);
