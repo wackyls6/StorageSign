@@ -1,6 +1,6 @@
 name: StorageSign
 main: wacky.storagesign.StorageSignCore
-version: 1.2.2
+version: 1.2.3
 author: wackyls6
 softdepend: [WorldGuard]
 website: http://forum.minecraftuser.jp/viewtopic.php?t=15065

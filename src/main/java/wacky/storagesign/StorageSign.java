@@ -30,7 +30,8 @@ public class StorageSign {
     		mat = getMaterial(str[0].split(":")[0]);
     		if(mat == Material.ENCHANTED_BOOK){
     			damage = NumberConversions.toShort(str[0].split(":")[2]);
-    			ench = Enchantment.getByName(str[0].split(":")[1]);
+    			ench = Enchantment.getByName(str[0].split(":")[1]);//旧仕様も
+    			if(ench == null) ench = Enchantment.getById(NumberConversions.toInt(str[0].split(":")[1]));
     		}
     		else if(mat == Material.POTION || mat == Material.SPLASH_POTION || mat == Material.LINGERING_POTION){
     			PotionInfo pi = new PotionInfo(mat, str[0].split(":"));
