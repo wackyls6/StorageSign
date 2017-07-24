@@ -47,13 +47,18 @@
             	<groupId>org.spigotmc</groupId>
             	<artifactId>spigot-api</artifactId>
             </plugin>
+            <plugin>
+            	<groupId>org.spigotmc</groupId>
+            	<artifactId>spigot-api</artifactId>
+            	<version>1.11.2-R0.1-SNAPSHOT</version>
+            </plugin>
         </plugins>
     </build>
     <dependencies>
         <dependency>
             <groupId>org.spigotmc</groupId>
             <artifactId>spigot-api</artifactId>
-            <version>1.9.4-R0.1-SNAPSHOT</version>
+            <version>1.12-R0.1-SNAPSHOT</version>
             <type>jar</type>
         </dependency>
     </dependencies>

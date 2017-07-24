@@ -8,6 +8,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.DoubleChest;
@@ -52,7 +53,7 @@ public class StorageSignCore extends JavaPlugin implements Listener{
 		config.options().header("StorageSign Configuration");
 		this.saveConfig();
 
-		ShapedRecipe storageSignRecipe = new ShapedRecipe(StorageSign.emptySign());
+		ShapedRecipe storageSignRecipe = new ShapedRecipe(new NamespacedKey(this,"ssr"),StorageSign.emptySign());
 		storageSignRecipe.shape("CCC","CSC","CHC");
 		storageSignRecipe.setIngredient('C', Material.CHEST);
 		storageSignRecipe.setIngredient('S', Material.SIGN);
