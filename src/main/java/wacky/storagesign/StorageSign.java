@@ -7,6 +7,7 @@ import org.bukkit.block.Sign;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.EnchantmentStorageMeta;
+import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.potion.PotionData;
@@ -176,7 +177,7 @@ public class StorageSign {
         return sign[i];
     }
 
-    public ItemStack getContents() {
+    public ItemStack getContents() {//中身取得、一部アイテム用の例外
         if (mat == null) return null;
         if (mat == Material.PORTAL){
         	if(damage == 0) return emptySign();
@@ -195,7 +196,14 @@ public class StorageSign {
         	potionMeta.setBasePotionData(new PotionData(pot, damage == 1, damage == 2));
             item.setItemMeta(potionMeta);
             return item;
+        }else if(mat == Material.FIREWORK){
+        	ItemStack item = new ItemStack(mat, 1);
+        	FireworkMeta fireworkMeta = (FireworkMeta)item.getItemMeta();
+        	fireworkMeta.setPower(damage);
+        	item.setItemMeta(fireworkMeta);
+        	return item;
         }
+
         return new ItemStack(mat, 1, damage);
     }
 

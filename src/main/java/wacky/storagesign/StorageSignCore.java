@@ -8,7 +8,6 @@ import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.DoubleChest;
@@ -38,6 +37,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.meta.EnchantmentStorageMeta;
+import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionData;
@@ -53,7 +53,9 @@ public class StorageSignCore extends JavaPlugin implements Listener{
 		config.options().header("StorageSign Configuration");
 		this.saveConfig();
 
-		ShapedRecipe storageSignRecipe = new ShapedRecipe(new NamespacedKey(this,"ssr"),StorageSign.emptySign());
+		//鯖別レシピが実装されたら
+		//ShapedRecipe storageSignRecipe = new ShapedRecipe(new NamespacedKey(this,"ssr"),StorageSign.emptySign());
+		ShapedRecipe storageSignRecipe = new ShapedRecipe(StorageSign.emptySign());
 		storageSignRecipe.shape("CCC","CSC","CHC");
 		storageSignRecipe.setIngredient('C', Material.CHEST);
 		storageSignRecipe.setIngredient('S', Material.SIGN);
@@ -126,9 +128,9 @@ public class StorageSignCore extends JavaPlugin implements Listener{
 
 			//アイテム登録
 			if (storageSign.getMaterial() == null || storageSign.getMaterial() == Material.AIR) {
+				if(itemMainHand == null) return;//申し訳ないが素手はNG
 				mat = itemMainHand.getType();
-				if (mat == Material.AIR) return;
-				else if (isStorageSign(itemMainHand)) storageSign.setMaterial(Material.PORTAL);
+				if (isStorageSign(itemMainHand)) storageSign.setMaterial(Material.PORTAL);
 				else if (isHorseEgg(itemMainHand)){
 					storageSign.setMaterial(Material.PORTAL);
 					storageSign.setDamage((short) 1);
@@ -151,6 +153,10 @@ public class StorageSignCore extends JavaPlugin implements Listener{
 						storageSign.setDamage((short) enchantMeta.getStoredEnchantLevel(ench));
 						storageSign.setEnchant(ench);
 					}
+				}else if(mat == Material.FIREWORK){
+					storageSign.setMaterial(mat);
+					FireworkMeta fireworkMeta = (FireworkMeta)itemMainHand.getItemMeta();
+					storageSign.setDamage((short) fireworkMeta.getPower());
 				}
 				else
 				{
