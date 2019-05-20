@@ -2,7 +2,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>wacky</groupId>
     <artifactId>storagesign</artifactId>
-    <version>1.1.6</version>
+    <version>1.2.6</version>
     <packaging>jar</packaging>
     <name>StorageSign</name>
     <repositories>
@@ -38,28 +38,13 @@
                     <encoding>${project.build.sourceEncoding}</encoding>
                 </configuration>
             </plugin>
-            <plugin>
-            	<groupId>org.spigotmc</groupId>
-            	<artifactId>spigot-api</artifactId>
-            	<version>1.9.4-R0.1-SNAPSHOT</version>
-            </plugin>
-            <plugin>
-            	<groupId>org.spigotmc</groupId>
-            	<artifactId>spigot-api</artifactId>
-            </plugin>
-            <plugin>
-            	<groupId>org.spigotmc</groupId>
-            	<artifactId>spigot-api</artifactId>
-            	<version>1.11.2-R0.1-SNAPSHOT</version>
-            </plugin>
         </plugins>
     </build>
     <dependencies>
         <dependency>
-            <groupId>org.spigotmc</groupId>
-            <artifactId>spigot-api</artifactId>
-            <version>1.12-R0.1-SNAPSHOT</version>
-            <type>jar</type>
+        	<groupId>org.spigotmc</groupId>
+        	<artifactId>spigot-api</artifactId>
+        	<version>1.13-R0.1-SNAPSHOT</version>
         </dependency>
     </dependencies>
     <properties>
