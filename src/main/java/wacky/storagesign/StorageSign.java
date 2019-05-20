@@ -14,6 +14,8 @@ import org.bukkit.potion.PotionData;
 import org.bukkit.potion.PotionType;
 import org.bukkit.util.NumberConversions;
 
+import wacky.storagesign.PotionInfo;
+
 public class StorageSign {
 
     protected Material mat;
