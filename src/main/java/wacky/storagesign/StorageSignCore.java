@@ -516,7 +516,7 @@ public class StorageSignCore extends JavaPlugin implements Listener{
     					//player.playSound(player.getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.6f, 1.5f);
     					//event.setCancelled(true);
     					return;
-    				}
+    				}//a
     			}
     		}
     	}//SSをプレイヤー以外拾えなくする

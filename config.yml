@@ -1,0 +1,12 @@
+#StorageSign Configuration
+no-permisson: You don't have permission
+
+manual-import: true
+manual-export: true
+auto-import: true
+auto-export: true
+autocollect: true
+hardrecipe: false
+
+divide-limit: 345600
+no-bud: false
