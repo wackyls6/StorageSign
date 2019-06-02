@@ -8,6 +8,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.DoubleChest;
@@ -31,6 +32,7 @@ import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.inventory.CraftItemEvent;
 import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.event.inventory.InventoryPickupItemEvent;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.Inventory;
@@ -56,8 +58,8 @@ public class StorageSignCore extends JavaPlugin implements Listener{
 		this.saveConfig();
 
 		//鯖別レシピが実装されたら
-		//ShapedRecipe storageSignRecipe = new ShapedRecipe(new NamespacedKey(this,"ssr"),StorageSign.emptySign());
-		ShapedRecipe storageSignRecipe = new ShapedRecipe(StorageSign.emptySign());
+		ShapedRecipe storageSignRecipe = new ShapedRecipe(new NamespacedKey(this,"ssr"),StorageSign.emptySign());
+		//ShapedRecipe storageSignRecipe = new ShapedRecipe(StorageSign.emptySign());
 		storageSignRecipe.shape("CCC","CSC","CHC");
 		storageSignRecipe.setIngredient('C', Material.CHEST);
 		storageSignRecipe.setIngredient('S', Material.SIGN);
@@ -386,19 +388,19 @@ public class StorageSignCore extends JavaPlugin implements Listener{
                         int[] z = {0,-1, 1, 0, 0};
                         Block block = blockInventory[j].getBlock().getRelative(x[i], y[i], z[i]);
                         if (i==0 && block.getType() == Material.SIGN && isStorageSign(block)) {
-                            sign = (Sign) block.getState();
-                            storageSign = new StorageSign(sign);
-                            if (storageSign.isSimilar(event.getItem())) {
-                                flag = true;
-                                break exportLoop;
-                            }
+                        	sign = (Sign) block.getState();
+                        	storageSign = new StorageSign(sign);
+                        	if (storageSign.isSimilar(event.getItem())) {
+                        		flag = true;
+                        		break exportLoop;
+                        	}
                         } else if (i != 0 && block.getType() == Material.WALL_SIGN && block.getData() == i+1 && isStorageSign(block)) {
-                            sign = (Sign) block.getState();
-                            storageSign = new StorageSign(sign);
-                            if (storageSign.isSimilar(event.getItem())) {
-                                flag = true;
-                                break exportLoop;
-                            }
+                        	sign = (Sign) block.getState();
+                        	storageSign = new StorageSign(sign);
+                        	if (storageSign.isSimilar(event.getItem())) {
+                        		flag = true;
+                        		break exportLoop;
+                        	}
                         }
                     }
                 }
@@ -406,7 +408,7 @@ public class StorageSignCore extends JavaPlugin implements Listener{
         }
     }
 
-    private void importSign(Sign sign, StorageSign storageSign, ItemStack item, Inventory inv) {
+	private void importSign(Sign sign, StorageSign storageSign, ItemStack item, Inventory inv) {
         //搬入　条件　1スタック以上アイテムが入っている
         if (inv.containsAtLeast(item, item.getMaxStackSize())) {
             inv.removeItem(item);
@@ -416,18 +418,75 @@ public class StorageSignCore extends JavaPlugin implements Listener{
         sign.update();
     }
 
+    //搬出先ブロックに枠指定があると事故る
     private void exportSign(Sign sign, StorageSign storageSign, ItemStack item, Inventory inv, Inventory dest) {
         if (!inv.containsAtLeast(item, item.getMaxStackSize()) && storageSign.getAmount() >= item.getAmount()) {
         	int stacks = 0;
         	int amount = 0;
         	ItemStack[] contents = dest.getContents();
-        	for(int i=0; i< contents.length; i++){
+
+        	if(dest.getType() == InventoryType.BREWING){
+        		switch(item.getType()){
+        			case NETHER_WART://上
+        			case SUGAR:
+        			case REDSTONE:
+        			case GLOWSTONE_DUST:
+        			case GUNPOWDER:
+        			case RABBIT_FOOT:
+        			case GLISTERING_MELON_SLICE:
+        			case GOLDEN_CARROT:
+        			case MAGMA_CREAM:
+        			case GHAST_TEAR:
+        			case SPIDER_EYE:
+        			case FERMENTED_SPIDER_EYE:
+        			case DRAGON_BREATH:
+        			case PUFFERFISH:
+        			case TURTLE_HELMET:
+        			case PHANTOM_MEMBRANE:
+                		if(inv.getLocation().getBlockY() > dest.getLocation().getBlockY()){//上から搬入
+                			if(contents[3] != null && !item.isSimilar(contents[3])) return;//他のアイテムが詰まってる
+                			else break;
+                		}else return;
+
+
+        			case BLAZE_POWDER://横or上
+                		if(inv.getLocation().getBlockY() > dest.getLocation().getBlockY()){//上から搬入
+                			if(contents[3] != null && !item.isSimilar(contents[3])) return;//他のアイテムが詰まってる
+                			else break;
+                		}else if(inv.getLocation().getBlockY() == dest.getLocation().getBlockY()){//横
+                			if(contents[4] != null && contents[4].getAmount() == 64) return;//パウダー詰まり
+                			else break;
+                		}else return;
+
+        			case POTION:
+        			case SPLASH_POTION:
+        			case LINGERING_POTION://横or下
+                		if(inv.getLocation().getBlockY() <= dest.getLocation().getBlockY()){
+                			if(contents[0] != null && contents[1] != null && contents[2] != null) return;
+                			else break;
+                		}else return;
+        			default://ロスト回避
+        				return;
+
+        		}
+
+
+        	}else if(dest.getType() == InventoryType.FURNACE){
+        		if(inv.getLocation().getBlockY() > dest.getLocation().getBlockY()){//上から搬入
+        			if(contents[0] != null && !item.isSimilar(contents[0])) return;//他のアイテムが詰まってる
+        		}else{//横から(下から)
+        			if(!item.getType().isFuel() || contents[1] != null && !item.isSimilar(contents[1])) return;//燃料以外 or 他のアイテムが詰まってる
+        		}
+        	}
+        	 for(int i=0; i< contents.length; i++){//PANPANによるロスト回避
         		if(item.isSimilar(contents[i])){
         			stacks++;
         			amount += contents[i].getAmount();
         		}
         	}
         	if(amount == stacks * item.getMaxStackSize() && dest.firstEmpty() == -1) return;
+
+
             inv.addItem(item);
             storageSign.addAmount(-item.getAmount());
         }
@@ -444,7 +503,7 @@ public class StorageSignCore extends JavaPlugin implements Listener{
     }
 
     @EventHandler
-    public void onInventoryPickup(InventoryPickupItemEvent event) {
+    public void onInventoryPickup(InventoryPickupItemEvent event) {//ホッパーに投げ込まれたとき
         if (event.isCancelled() || !config.getBoolean("auto-import")) return;
 
         InventoryHolder holder = event.getInventory().getHolder();
@@ -464,7 +523,7 @@ public class StorageSignCore extends JavaPlugin implements Listener{
                         flag = true;
                         break;
                     }
-                } else if (i != 0 && block.getType() == Material.WALL_SIGN && block.getData() == i+1 && isStorageSign(block)) {
+                } else if (i != 0 && block.getType() == Material.WALL_SIGN && block.getData() == i+1 && isStorageSign(block)) {//BlockFaceに変更？(めんどい)
                     sign = (Sign) block.getState();
                     storageSign = new StorageSign(sign);
                     if (storageSign.isSimilar(event.getItem().getItemStack())) {
