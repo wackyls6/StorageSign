@@ -14,4 +14,8 @@ StorageSign
 ---
 参考にさせていただいたMod　StorageBox　無限チェスト
 
+<<<<<<< HEAD
 始まりのﾂｲｰﾖ　https://twitter.com/13pWacky/status/372075397245968384
+=======
+始まりのﾂｲｰﾖ　https://twitter.com/13pWacky/status/372075397245968384
+>>>>>>> branch 'master' of https://github.com/wackyls6/StorageSign.git
