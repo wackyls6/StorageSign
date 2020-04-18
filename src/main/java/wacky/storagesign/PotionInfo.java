@@ -68,7 +68,7 @@ public class PotionInfo {
 
 		}else if(str.length == 1) pot = PotionType.WATER;
 
-		else{
+		else{//タイプとレベル
 			pot = getType(str[1]);
 			damage = NumberConversions.toShort(str[2]);
 		}
@@ -77,7 +77,7 @@ public class PotionInfo {
 	private PotionType getType(String substring) {
 		if(substring.equals("BREAT")) return PotionType.WATER_BREATHING;//例外
 		else if(substring.equals("HEAL")) return PotionType.INSTANT_HEAL;
-		else if(substring.equals("DAMAG")) return PotionType.INSTANT_HEAL;
+		else if(substring.equals("DAMAG")) return PotionType.INSTANT_DAMAGE;
         else{ //後ろ切れてるかも
             for(PotionType p : PotionType.values()) {
                 if(p.toString().startsWith(substring)) return p;
