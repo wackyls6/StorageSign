@@ -8,7 +8,7 @@ StorageSign
 
 ダウンロードはreleasesからどうぞ
 
-使い方についてはこちらなど　http://farm-server.com/ss.html　暇があったら追記します・・・
+使い方についてはこちらをご参照ください　http://farm-server.com/ss.html  暇があったら追記します・・・
 
 
 ---

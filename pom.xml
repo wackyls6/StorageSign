@@ -2,7 +2,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>wacky</groupId>
     <artifactId>storagesign</artifactId>
-    <version>1.2.6</version>
+    <version>1.2.8</version>
     <packaging>jar</packaging>
     <name>StorageSign</name>
     <repositories>
@@ -44,7 +44,7 @@
         <dependency>
         	<groupId>org.spigotmc</groupId>
         	<artifactId>spigot-api</artifactId>
-        	<version>1.13-R0.1-SNAPSHOT</version>
+        	<version>1.15-R0.1-SNAPSHOT</version>
         </dependency>
     </dependencies>
     <properties>
