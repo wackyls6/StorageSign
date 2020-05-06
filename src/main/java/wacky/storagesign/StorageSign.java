@@ -18,13 +18,14 @@ import wacky.storagesign.PotionInfo;
 public class StorageSign {
 
 	protected Material smat;
-    protected Material mat;
+	protected Material mat;
     protected short damage;
     protected Enchantment ench;
     protected PotionType pot;
     protected int amount;
     protected int stack;
     protected boolean isEmpty;
+    
     //StorageSignだと確認してから使っちくりー
     public StorageSign(ItemStack item) {
     	String[] str = item.getItemMeta().getLore().get(0).split(" ");
@@ -42,6 +43,7 @@ public class StorageSign {
     			damage = pi.getDamage();
     			pot = pi.getPotionType();
     		}else if(str[0].contains(":")) damage = NumberConversions.toShort(str[0].split(":")[1]);
+    		else if(mat== Material.STONE_SLAB )  mat = Material.SMOOTH_STONE_SLAB;//1.13の滑らかハーフと1.14の石ハーフ区別
     		amount = NumberConversions.toInt(str[1]);
     	}
     	smat = item.getType();
@@ -53,12 +55,12 @@ public class StorageSign {
     	this(sign,Material.OAK_SIGN);
     }*/
     
-	public StorageSign(Sign sign,Material signmat) {
+	public StorageSign(Sign sign,Material signmat) {//上と統合したい
         String[] line2 = sign.getLine(1).trim().split(":");
         mat = getMaterial(line2[0]);
         isEmpty = mat == null || mat == Material.AIR;
-        if(line2.length == 2) damage = NumberConversions.toShort(line2[1]);
-        if(mat == Material.ENCHANTED_BOOK){
+        
+		 if(mat == Material.ENCHANTED_BOOK){
 			EnchantInfo ei = new EnchantInfo(mat, line2);
         	damage = ei.getDamage();
         	ench = ei.getEnchantType();
@@ -69,27 +71,57 @@ public class StorageSign {
 			damage = pi.getDamage();
 			pot = pi.getPotionType();
         }
+        else if(line2.length == 2) damage = NumberConversions.toShort(line2[1]);
+        else if(mat== Material.STONE_SLAB )  mat = Material.SMOOTH_STONE_SLAB;//1.13の滑らかハーフと1.14の石ハーフ区別
+		 
         amount = NumberConversions.toInt(sign.getLine(2));
         isEmpty = amount == 0;
         stack = 1;
 
+        //壁掛け看板のチェック
         if(signmat == Material.OAK_WALL_SIGN) smat = Material.OAK_SIGN;
         else if(signmat == Material.BIRCH_WALL_SIGN) smat = Material.BIRCH_SIGN;
         else if(signmat == Material.SPRUCE_WALL_SIGN) smat = Material.SPRUCE_SIGN;
         else if(signmat == Material.JUNGLE_WALL_SIGN) smat = Material.JUNGLE_SIGN;
         else if(signmat == Material.ACACIA_WALL_SIGN) smat = Material.ACACIA_SIGN;
         else if(signmat == Material.DARK_OAK_WALL_SIGN) smat = Material.DARK_OAK_SIGN;
+        //else if(signmat == Material.CRIMSON_WALL_SIGN) smat = Material.CRIMSON_SIGN;
+        //else if(signmat == Material.WARPED_WALL_SIGN) smat = Material.WARPED_SIGN;
         else smat = signmat;
         
     }
 
+	//変換
 	protected Material getMaterial(String str) {
-    	//1.12までは後ろのせいで判別不能なアイテムたち？
 		if (str.matches("")) return Material.AIR;
-        if (str.matches("EmptySign")) return Material.END_PORTAL;
+       // if (str.matches("EmptySign")) return Material.END_PORTAL;
+        else if(str.matches("EmptySign") || str.matches("OakStorageSign")) {
+        	damage = 1;
+        	return Material.OAK_SIGN;
+        }
+        else if(str.matches("SpruceStorageSign")) {
+        	damage = 1;
+        	return Material.SPRUCE_SIGN;
+        }
+        else if(str.matches("BirchStorageSign")) {
+        	damage = 1;
+        	return Material.BIRCH_SIGN;
+        }
+        else if(str.matches("JungleStorageSign")) {
+        	damage = 1;
+        	return Material.JUNGLE_SIGN;
+        }
+        else if(str.matches("AcaciaStorageSign")) {
+        	damage = 1;
+        	return Material.ACACIA_SIGN;
+        }
+        else if(str.matches("DarkOakStorageSign")) {
+        	damage = 1;
+        	return Material.DARK_OAK_SIGN;
+        }
         if (str.matches("HorseEgg")){
         	damage = 1;
-        	return Material.END_PORTAL;
+        	return Material.END_PORTAL;//ガスト卵でよくね？
         }
         //if (str.startsWith("REDSTONE_TORCH")) return Material.REDSTONE_TORCH;
         //if (str.startsWith("RS_COMPARATOR")) return Material.COMPARATOR;
@@ -117,12 +149,17 @@ public class StorageSign {
         return mat;//nullなら空.
     }
 	
-    protected String getShortName() {//看板用15文字以内、名前ごと変わったので不要？そもそも15文字オーバー可
+    protected String getShortName() {//2行目の記載内容
         if (mat == null || mat == Material.AIR) return "";
         else if (mat == Material.END_PORTAL){
-        	if(damage == 0) return "EmptySign";
+        	if(damage == 0) return "OakStorageSign";
         	if(damage == 1) return "HorseEgg";
-        }
+        }else if(mat == Material.OAK_SIGN && damage == 1) return "OakStorageSign";
+        else if(mat == Material.SPRUCE_SIGN && damage == 1) return "SpruceStorageSign";
+        else if(mat == Material.BIRCH_SIGN && damage == 1) return "BirchStorageSign";
+        else if(mat == Material.JUNGLE_SIGN && damage == 1) return "JungleStorageSign";
+        else if(mat == Material.ACACIA_SIGN && damage == 1) return "AcaciaStorageSign";
+        else if(mat == Material.DARK_OAK_SIGN && damage == 1) return "DarkOakStorageSign";
         //else if (mat == Material.LEGACY_STAINED_GLASS_PANE) return damage == 0 ? "STAINGLASS_PANE" : "STAINGLASS_P:" + damage;
         //else if (mat == Material.LEGACY_REDSTONE_COMPARATOR) return "RS_COMPARATOR";
         //else if (mat == Material.LEGACY_REDSTONE_TORCH_ON) return "REDSTONE_TORCH";
@@ -157,16 +194,11 @@ public class StorageSign {
         List<String> list = new ArrayList<>();
         //IDとMaterial名が混ざってたり、エンチャ本対応したり
         if (isEmpty) list.add("Empty");
-        else if (mat == Material.END_PORTAL){
-        	if(damage == 0) list.add("EmptySign " + amount);
-        	if(damage == 1) list.add("HorseEgg " + amount);
-        }
         else if (mat == Material.ENCHANTED_BOOK) list.add(mat.toString() + ":" + ench.getKey().getKey() + ":" + damage + " " + amount);
         else if (mat == Material.POTION || mat == Material.SPLASH_POTION || mat == Material.LINGERING_POTION){
         	list.add(mat.toString() + ":" + pot.toString() + ":" + damage + " " + amount);
         }
-        else if (damage != 0) list.add(mat.toString() + ":" + damage + " " + amount);
-        else list.add(mat.toString() + " " + amount);
+        else list.add(getShortName() +" "+ amount);
         meta.setLore(list);
         item.setItemMeta(meta);
         return item;
@@ -214,8 +246,12 @@ public class StorageSign {
         if (mat == Material.END_PORTAL){
         	if(damage == 0) return emptySign();
         	if(damage == 1) return emptyHorseEgg();
+        }if(mat == Material.STONE_SLAB) return new ItemStack(mat,1);//ダメージ値0にする
+        else if(mat == Material.OAK_SIGN  || mat == Material.SPRUCE_SIGN || mat == Material.BIRCH_SIGN || mat == Material.JUNGLE_SIGN || mat == Material.ACACIA_SIGN  || mat == Material.DARK_OAK_SIGN) {
+        	if(damage == 0) return new ItemStack(mat,1);
+        	else return emptySign(mat);
         }
-        if (mat == Material.ENCHANTED_BOOK) {
+        else  if (mat == Material.ENCHANTED_BOOK) {
             ItemStack item = new ItemStack(mat, 1);
             EnchantmentStorageMeta enchantMeta = (EnchantmentStorageMeta)item.getItemMeta();
             enchantMeta.addStoredEnchant(ench, damage, true);
@@ -235,8 +271,8 @@ public class StorageSign {
         	item.setItemMeta(fireworkMeta);
         	return item;
         }
-
-        return new ItemStack(mat, 1, damage);
+        if(damage == 0) return new ItemStack(mat, 1);//大半はダメージなくなった
+        return new ItemStack(mat, 1, damage);//ツール系のみダメージあり
     }
 
 	//回収可能か判定、エンチャ本は本自身の合成回数を問わない
@@ -307,6 +343,10 @@ public class StorageSign {
 
 	public PotionType getPotion() {
 		return pot;
+	}
+	
+	public Material getSmat() {
+		return smat;
 	}
 
 }

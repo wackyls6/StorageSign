@@ -163,9 +163,15 @@ public class StorageSignCore extends JavaPlugin implements Listener{
 			if (storageSign.getMaterial() == null || storageSign.getMaterial() == Material.AIR) {
 				if(itemMainHand == null) return;//申し訳ないが素手はNG
 				mat = itemMainHand.getType();
-				if (isStorageSign(itemMainHand)) storageSign.setMaterial(Material.END_PORTAL);
+				if (isStorageSign(itemMainHand)) {
+					storageSign.setMaterial(mat);
+					storageSign.setDamage((short) 1);
+				}
 				else if (isHorseEgg(itemMainHand)){
 					storageSign.setMaterial(Material.END_PORTAL);
+					storageSign.setDamage((short) 1);
+				}
+				else if(mat == Material.STONE_SLAB){	
 					storageSign.setDamage((short) 1);
 				}
 				else if (mat == Material.POTION || mat == Material.SPLASH_POTION || mat == Material.LINGERING_POTION)
@@ -210,11 +216,11 @@ public class StorageSignCore extends JavaPlugin implements Listener{
 					itemSign.setAmount(0);
 					player.getInventory().setItemInMainHand(itemSign.getStorageSign());
 				}//空看板収納
-				else if (itemSign.isEmpty() && storageSign.getMaterial() == Material.END_PORTAL && storageSign.getDamage() == 0 && config.getBoolean("manual-import")) {
-					if (player.isSneaking()) {//木材の種類によらず入る
+				else if (itemSign.isEmpty() && storageSign.getMaterial() == itemSign.getSmat() && storageSign.getDamage() == 1 && config.getBoolean("manual-import")) {
+					if (player.isSneaking() ) {
 						storageSign.addAmount(itemMainHand.getAmount());
 						player.getInventory().clear(player.getInventory().getHeldItemSlot());
-					} else for (int i=0; i<player.getInventory().getSize(); i++) {//オークのみ入る
+					} else for (int i=0; i<player.getInventory().getSize(); i++) {
 						ItemStack item = player.getInventory().getItem(i);
 						if (storageSign.isSimilar(item)) {
 							storageSign.addAmount(item.getAmount());
