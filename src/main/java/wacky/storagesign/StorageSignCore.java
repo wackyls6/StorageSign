@@ -11,9 +11,11 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.DoubleChest;
 import org.bukkit.block.Sign;
+import org.bukkit.block.data.type.WallSign;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.enchantments.Enchantment;
@@ -315,13 +317,11 @@ public class StorageSignCore extends JavaPlugin implements Listener{
         Map<Location, StorageSign> breakSignMap = new HashMap<>();
         if (isStorageSign(block)) breakSignMap.put(block.getLocation(), new StorageSign((Sign)block.getState(),block.getType()));
 
-        for (int i=0; i<5; i++) {//ダメージ値切って東西南北で判定したほうがよさそう
-            int[] x = {0, 0, 0,-1, 1};
-            int[] y = {1, 0, 0, 0, 0};
-            int[] z = {0,-1, 1, 0, 0};
-            block = event.getBlock().getRelative(x[i], y[i], z[i]);
+        for (int i=0; i<5; i++) {//東西南北で判定
+            BlockFace[] face = {BlockFace.UP,BlockFace.SOUTH,BlockFace.NORTH,BlockFace.EAST,BlockFace.WEST};
+            block = event.getBlock().getRelative(face[i]);
             if (i==0 && isSignPost(block) && isStorageSign(block)) breakSignMap.put(block.getLocation(), new StorageSign((Sign)block.getState(),block.getType()));
-            else if(isWallSign(block) && block.getData() == i+1 && isStorageSign(block)) breakSignMap.put(block.getLocation(), new StorageSign((Sign)block.getState(),block.getType()));
+            else if(isWallSign(block) && ((WallSign) block.getBlockData()).getFacing() == face[i] && isStorageSign(block)) breakSignMap.put(block.getLocation(), new StorageSign((Sign)block.getState(),block.getType()));
         }
         if (breakSignMap.isEmpty()) return;
         if (!event.getPlayer().hasPermission("storagesign.break")) {
@@ -342,8 +342,9 @@ public class StorageSignCore extends JavaPlugin implements Listener{
     @EventHandler
     public void onBlockPlace(BlockPlaceEvent event) {
         if (event.isCancelled() || !isStorageSign(event.getItemInHand())) return;
-        if (!event.getPlayer().hasPermission("storagesign.place")) {
-            event.getPlayer().sendMessage(ChatColor.RED + config.getString("no-permisson"));
+        Player player = event.getPlayer();
+        if (!player.hasPermission("storagesign.place")) {
+            player.sendMessage(ChatColor.RED + config.getString("no-permisson"));
             event.setCancelled(true);
             return;
         }
@@ -351,9 +352,10 @@ public class StorageSignCore extends JavaPlugin implements Listener{
         Sign sign = (Sign)event.getBlock().getState();
         for (int i=0; i<4; i++) sign.setLine(i, storageSign.getSigntext(i));
         sign.update();
-        event.getPlayer().closeInventory();
+        player.closeInventory();//何故か仕事しない
     }
-
+    
+    
     @EventHandler
     public void onItemMove(InventoryMoveItemEvent event) {
         if (event.isCancelled()) return;
@@ -376,10 +378,8 @@ public class StorageSignCore extends JavaPlugin implements Listener{
                 for (int j=0; j<2; j++) {
                     if (blockInventory[j] == null) break;
                     for (int i=0; i<5; i++) {
-                        int[] x = {0, 0, 0,-1, 1};
-                        int[] y = {1, 0, 0, 0, 0};
-                        int[] z = {0,-1, 1, 0, 0};
-                        Block block = blockInventory[j].getBlock().getRelative(x[i], y[i], z[i]);
+                        BlockFace[] face = {BlockFace.UP,BlockFace.SOUTH,BlockFace.NORTH,BlockFace.EAST,BlockFace.WEST};
+                        Block block = blockInventory[j].getBlock().getRelative(face[i]);
                         if (i==0 && isSignPost(block) && isStorageSign(block)) {
                             sign = (Sign) block.getState();
                             storageSign = new StorageSign(sign,block.getType());
@@ -387,7 +387,7 @@ public class StorageSignCore extends JavaPlugin implements Listener{
                                 flag = true;
                                 break importLoop;
                             }
-                        } else if (i != 0 && isWallSign(block) && block.getData() == i+1 && isStorageSign(block)) {
+                        } else if (i != 0 && isWallSign(block) &&  ((WallSign) block.getBlockData()).getFacing() == face[i] && isStorageSign(block)) {
                             sign = (Sign) block.getState();
                             storageSign = new StorageSign(sign,block.getType());
                             if (storageSign.isSimilar(event.getItem())) {
@@ -419,10 +419,8 @@ public class StorageSignCore extends JavaPlugin implements Listener{
                 for (int j=0; j<2; j++) {
                     if (blockInventory[j] == null) break;
                     for (int i=0; i<5; i++) {
-                        int[] x = {0, 0, 0,-1, 1};
-                        int[] y = {1, 0, 0, 0, 0};
-                        int[] z = {0,-1, 1, 0, 0};
-                        Block block = blockInventory[j].getBlock().getRelative(x[i], y[i], z[i]);
+                        BlockFace[] face = {BlockFace.UP,BlockFace.SOUTH,BlockFace.NORTH,BlockFace.EAST,BlockFace.WEST};
+                        Block block = blockInventory[j].getBlock().getRelative(face[i]);
                         if (i==0 && isSignPost(block) && isStorageSign(block)) {
                         	sign = (Sign) block.getState();
                         	storageSign = new StorageSign(sign,block.getType());
@@ -430,7 +428,7 @@ public class StorageSignCore extends JavaPlugin implements Listener{
                         		flag = true;
                         		break exportLoop;
                         	}
-                        } else if (i != 0 && isWallSign(block) && block.getData() == i+1 && isStorageSign(block)) {
+                        } else if (i != 0 && isWallSign(block) &&  ((WallSign) block.getBlockData()).getFacing() == face[i] && isStorageSign(block)) {
                         	sign = (Sign) block.getState();
                         	storageSign = new StorageSign(sign,block.getType());
                         	if (storageSign.isSimilar(event.getItem())) {
@@ -548,10 +546,8 @@ public class StorageSignCore extends JavaPlugin implements Listener{
             StorageSign storageSign = null;
             boolean flag = false;
             for (int i=0; i<5; i++) {
-                int[] x = {0, 0, 0,-1, 1};
-                int[] y = {1, 0, 0, 0, 0};
-                int[] z = {0,-1, 1, 0, 0};
-                Block block = ((BlockState)holder).getBlock().getRelative(x[i], y[i], z[i]);
+                BlockFace[] face = {BlockFace.UP,BlockFace.SOUTH,BlockFace.NORTH,BlockFace.EAST,BlockFace.WEST};
+                Block block = ((BlockState)holder).getBlock().getRelative(face[i]);
                 if (i==0 && isSignPost(block) && isStorageSign(block)) {
                     sign = (Sign) block.getState();
                     storageSign = new StorageSign(sign,block.getType());
@@ -559,7 +555,7 @@ public class StorageSignCore extends JavaPlugin implements Listener{
                         flag = true;
                         break;
                     }
-                } else if (i != 0 && isWallSign(block) && block.getData() == i+1 && isStorageSign(block)) {//BlockFaceに変更？(めんどい)
+                } else if (i != 0 && isWallSign(block) && ((WallSign) block.getBlockData()).getFacing() == face[i] && isStorageSign(block)) {//BlockFaceに変更？(めんどい)
                     sign = (Sign) block.getState();
                     storageSign = new StorageSign(sign,block.getType());
                     if (storageSign.isSimilar(event.getItem().getItemStack())) {
