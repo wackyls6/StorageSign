@@ -363,9 +363,9 @@ public class StorageSignCore extends JavaPlugin implements Listener{
         Boolean flag = false;
         Sign sign = null;
         StorageSign storageSign = null;
-
         if (config.getBoolean("auto-import")) {
-            if (event.getDestination().getHolder() instanceof Minecart);//何もしない
+        	if (event.getDestination().getLocation() == null);//コンポスター用に生成された一時インベントリ
+        	else if (event.getDestination().getHolder() instanceof Minecart);//何もしない
             else if (event.getDestination().getHolder() instanceof DoubleChest) {
                 DoubleChest lc = (DoubleChest)event.getDestination().getHolder();
                 blockInventory[0] = (BlockState) lc.getLeftSide();
@@ -406,7 +406,8 @@ public class StorageSignCore extends JavaPlugin implements Listener{
             blockInventory[0] = null;
             blockInventory[1] = null;
             flag = false;
-            if (event.getSource().getHolder() instanceof Minecart);
+        	if (event.getSource().getLocation() == null);//一時インベントリ
+        	else if (event.getSource().getHolder() instanceof Minecart);
             else if (event.getSource().getHolder() instanceof DoubleChest) {
                 DoubleChest lc = (DoubleChest)event.getSource().getHolder();
                 blockInventory[0] = (BlockState) lc.getLeftSide();
@@ -505,7 +506,7 @@ public class StorageSignCore extends JavaPlugin implements Listener{
         		}
 
 
-        	}else if(dest.getType() == InventoryType.FURNACE){
+        	}else if(dest.getType() == InventoryType.FURNACE || dest.getType() == InventoryType.BLAST_FURNACE || dest.getType() == InventoryType.SMOKER){
         		if(inv.getLocation().getBlockY() > dest.getLocation().getBlockY()){//上から搬入
         			if(contents[0] != null && !item.isSimilar(contents[0])) return;//他のアイテムが詰まってる
         		}else{//横から(下から)
