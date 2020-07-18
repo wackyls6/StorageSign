@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
@@ -43,6 +42,7 @@ import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.ShapedRecipe;
+import org.bukkit.inventory.meta.BannerMeta;
 import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.inventory.meta.PotionMeta;
@@ -52,6 +52,7 @@ import org.bukkit.potion.PotionData;
 public class StorageSignCore extends JavaPlugin implements Listener{
 
 	FileConfiguration config;
+    static BannerMeta ominousBannerMeta;
 
 	@Override
 	public void onEnable() {
@@ -174,6 +175,7 @@ public class StorageSignCore extends JavaPlugin implements Listener{
 					storageSign.setDamage((short) 1);
 				}
 				else if(mat == Material.STONE_SLAB){	
+					storageSign.setMaterial(mat);
 					storageSign.setDamage((short) 1);
 				}
 				else if (mat == Material.POTION || mat == Material.SPLASH_POTION || mat == Material.LINGERING_POTION)
@@ -198,6 +200,14 @@ public class StorageSignCore extends JavaPlugin implements Listener{
 					storageSign.setMaterial(mat);
 					FireworkMeta fireworkMeta = (FireworkMeta)itemMainHand.getItemMeta();
 					storageSign.setDamage((short) fireworkMeta.getPower());
+				}
+				else if(mat == Material.WHITE_BANNER){
+					storageSign.setMaterial(mat);
+					BannerMeta bannerMeta = (BannerMeta)itemMainHand.getItemMeta();
+					if(bannerMeta.getPatterns().size() == 8) {
+						ominousBannerMeta = bannerMeta;
+						storageSign.setDamage((short) 8);
+					}
 				}
 				else
 				{
@@ -363,6 +373,7 @@ public class StorageSignCore extends JavaPlugin implements Listener{
         Boolean flag = false;
         Sign sign = null;
         StorageSign storageSign = null;
+        ItemStack item = event.getItem();
         if (config.getBoolean("auto-import")) {
         	if (event.getDestination().getLocation() == null);//コンポスター用に生成された一時インベントリ
         	else if (event.getDestination().getHolder() instanceof Minecart);//何もしない
@@ -381,16 +392,19 @@ public class StorageSignCore extends JavaPlugin implements Listener{
                         BlockFace[] face = {BlockFace.UP,BlockFace.SOUTH,BlockFace.NORTH,BlockFace.EAST,BlockFace.WEST};
                         Block block = blockInventory[j].getBlock().getRelative(face[i]);
                         if (i==0 && isSignPost(block) && isStorageSign(block)) {
+                        	if(item.getType() == Material.WHITE_BANNER) {
+                        		
+                        	}
                             sign = (Sign) block.getState();
                             storageSign = new StorageSign(sign,block.getType());
-                            if (storageSign.isSimilar(event.getItem())) {
+                            if (storageSign.isSimilar(item)) {
                                 flag = true;
                                 break importLoop;
                             }
                         } else if (i != 0 && isWallSign(block) &&  ((WallSign) block.getBlockData()).getFacing() == face[i] && isStorageSign(block)) {
                             sign = (Sign) block.getState();
                             storageSign = new StorageSign(sign,block.getType());
-                            if (storageSign.isSimilar(event.getItem())) {
+                            if (storageSign.isSimilar(item)) {
                                 flag = true;
                                 break importLoop;
                             }
@@ -398,7 +412,7 @@ public class StorageSignCore extends JavaPlugin implements Listener{
                     }
                 }
             //搬入先が見つかった(搬入するとは言ってない)
-            if (flag) importSign(sign, storageSign, event.getItem(), event.getDestination());
+            if (flag) importSign(sign, storageSign, item, event.getDestination());
         }
 
         //搬出用にリセット
@@ -425,21 +439,21 @@ public class StorageSignCore extends JavaPlugin implements Listener{
                         if (i==0 && isSignPost(block) && isStorageSign(block)) {
                         	sign = (Sign) block.getState();
                         	storageSign = new StorageSign(sign,block.getType());
-                        	if (storageSign.isSimilar(event.getItem())) {
+                        	if (storageSign.isSimilar(item)) {
                         		flag = true;
                         		break exportLoop;
                         	}
                         } else if (i != 0 && isWallSign(block) &&  ((WallSign) block.getBlockData()).getFacing() == face[i] && isStorageSign(block)) {
                         	sign = (Sign) block.getState();
                         	storageSign = new StorageSign(sign,block.getType());
-                        	if (storageSign.isSimilar(event.getItem())) {
+                        	if (storageSign.isSimilar(item)) {
                         		flag = true;
                         		break exportLoop;
                         	}
                         }
                     }
                 }
-            if (flag) exportSign(sign, storageSign, event.getItem(), event.getSource(), event.getDestination());
+            if (flag) exportSign(sign, storageSign, item, event.getSource(), event.getDestination());
         }
     }
 
@@ -650,6 +664,5 @@ public class StorageSignCore extends JavaPlugin implements Listener{
     	}
     	return false;
     }
-    
 
 }

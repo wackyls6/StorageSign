@@ -6,6 +6,7 @@ import org.bukkit.Material;
 import org.bukkit.block.Sign;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.BannerMeta;
 import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -270,6 +271,11 @@ public class StorageSign {
         	fireworkMeta.setPower(damage);
         	item.setItemMeta(fireworkMeta);
         	return item;
+        }else if(mat == Material.WHITE_BANNER && damage == 8) {
+        	ItemStack item = new ItemStack(mat,1);
+        	item.setItemMeta(StorageSignCore.ominousBannerMeta);//どこかからコピー
+        	return item;
+        	
         }
         if(damage == 0) return new ItemStack(mat, 1);//大半はダメージなくなった
         return new ItemStack(mat, 1, damage);//ツール系のみダメージあり
