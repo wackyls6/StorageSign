@@ -49,6 +49,9 @@ import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionData;
 
+import org.bukkit.DyeColor;
+
+
 public class StorageSignCore extends JavaPlugin implements Listener{
 
 	FileConfiguration config;
@@ -351,19 +354,33 @@ public class StorageSignCore extends JavaPlugin implements Listener{
 
     @EventHandler
     public void onBlockPlace(BlockPlaceEvent event) {
-        if (event.isCancelled() || !isStorageSign(event.getItemInHand())) return;
-        Player player = event.getPlayer();
+		if (event.isCancelled() || !isStorageSign(event.getItemInHand())) return;
+		
+		Player player = event.getPlayer();
+		
         if (!player.hasPermission("storagesign.place")) {
-            player.sendMessage(ChatColor.RED + config.getString("no-permisson"));
-            event.setCancelled(true);
+			player.sendMessage(ChatColor.RED + config.getString("no-permisson"));
+			
+			event.setCancelled(true);
+			
             return;
-        }
-        StorageSign storageSign = new StorageSign(event.getItemInHand());
-        Sign sign = (Sign)event.getBlock().getState();
-        for (int i=0; i<4; i++) sign.setLine(i, storageSign.getSigntext(i));
-        sign.update();
-        player.closeInventory();//何故か仕事しない
-    }
+		}
+		
+		StorageSign storageSign = new StorageSign(event.getItemInHand());
+		
+		Sign sign = (Sign)event.getBlock().getState();
+		
+		for (int i=0; i<4; i++) sign.setLine(i, storageSign.getSigntext(i));
+		
+		// ダークオーク看板の文字色を白に
+		if(sign.getType() == Material.DARK_OAK_SIGN || sign.getType() == Material.DARK_OAK_WALL_SIGN){
+			sign.setColor(DyeColor.WHITE);
+		}
+
+		sign.update();
+		
+        player.closeInventory();//何故か仕事しない　<-　onBlockPlace関数が終了してから編集画面を開くらしい
+	}
     
     
     @EventHandler
