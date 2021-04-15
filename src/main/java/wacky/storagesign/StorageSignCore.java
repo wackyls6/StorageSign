@@ -62,8 +62,8 @@ public class StorageSignCore extends JavaPlugin implements Listener{
 		this.saveConfig();
 
 		//鯖別レシピが実装されたら
-		Material[] sign = {Material.OAK_SIGN,Material.BIRCH_SIGN,Material.SPRUCE_SIGN,Material.JUNGLE_SIGN,Material.ACACIA_SIGN,Material.DARK_OAK_SIGN};
-		for(int i= 0 ;i<6;i++) {
+		Material[] sign = {Material.OAK_SIGN,Material.BIRCH_SIGN,Material.SPRUCE_SIGN,Material.JUNGLE_SIGN,Material.ACACIA_SIGN,Material.DARK_OAK_SIGN,Material.CRIMSON_SIGN,Material.WARPED_SIGN};
+		for(int i= 0 ;i<8;i++) {
 			
 		ShapedRecipe storageSignRecipe = new ShapedRecipe(new NamespacedKey(this,"ssr"+i),StorageSign.emptySign(sign[i]));
 		//ShapedRecipe storageSignRecipe = new ShapedRecipe(StorageSign.emptySign());
@@ -82,43 +82,22 @@ public class StorageSignCore extends JavaPlugin implements Listener{
 	@Override
 	public void onDisable(){}
 
+	
 	public boolean isStorageSign(ItemStack item) {
 		if (item == null) return false;
-
-		switch (item.getType()) {
-		case OAK_SIGN:
-		case BIRCH_SIGN:
-		case SPRUCE_SIGN:
-		case JUNGLE_SIGN:
-		case ACACIA_SIGN:
-		case DARK_OAK_SIGN:
-
+		if(isSignPost(item.getType())) {
+			
 			if (!item.getItemMeta().hasDisplayName()) return false;
 			if (!item.getItemMeta().getDisplayName().matches("StorageSign")) return false;
 			return item.getItemMeta().hasLore();
-		default:
 		}
 		return false;
 	}
 
 	public boolean isStorageSign(Block block) {
-		switch (block.getType()) {
-		case OAK_SIGN:
-		case OAK_WALL_SIGN:
-		case BIRCH_SIGN:
-		case BIRCH_WALL_SIGN:
-		case SPRUCE_SIGN:
-		case SPRUCE_WALL_SIGN:
-		case JUNGLE_SIGN:
-		case JUNGLE_WALL_SIGN:
-		case ACACIA_SIGN:
-		case ACACIA_WALL_SIGN:
-		case DARK_OAK_SIGN:
-		case DARK_OAK_WALL_SIGN:
+		if(isSignPost(block.getType()) || isWallSign(block.getType())) {			
 			Sign sign = (Sign) block.getState();
 			if (sign.getLine(0).matches("StorageSign")) return true;
-			break;
-		default:
 		}
 		return false;
 	}
@@ -362,7 +341,7 @@ public class StorageSignCore extends JavaPlugin implements Listener{
         Sign sign = (Sign)event.getBlock().getState();
         for (int i=0; i<4; i++) sign.setLine(i, storageSign.getSigntext(i));
         sign.update();
-        player.closeInventory();//何故か仕事しない
+        player.closeInventory();//時差発動が必要らしい
     }
     
     
@@ -393,7 +372,9 @@ public class StorageSignCore extends JavaPlugin implements Listener{
                         Block block = blockInventory[j].getBlock().getRelative(face[i]);
                         if (i==0 && isSignPost(block) && isStorageSign(block)) {
                         	if(item.getType() == Material.WHITE_BANNER) {
-                        		
+                        		//
+                        		//襲撃バナー用
+                        		//
                         	}
                             sign = (Sign) block.getState();
                             storageSign = new StorageSign(sign,block.getType());
@@ -637,6 +618,16 @@ public class StorageSignCore extends JavaPlugin implements Listener{
     
     private boolean isSignPost(Block block) {
     	Material mat = block.getType();
+    	return isSignPost(mat);
+    }
+    
+    private boolean isWallSign(Block block) {
+    	Material mat = block.getType();
+    	return isWallSign(mat);
+    }
+    
+    //看板も8種類になったし、mat版おいとく
+    private boolean isSignPost(Material mat) {
     	switch(mat) {
     	case OAK_SIGN:
     	case BIRCH_SIGN:
@@ -644,14 +635,15 @@ public class StorageSignCore extends JavaPlugin implements Listener{
     	case JUNGLE_SIGN:
     	case ACACIA_SIGN:
     	case DARK_OAK_SIGN:
+    	case CRIMSON_SIGN:
+    	case WARPED_SIGN:
     		return true;
     	default:
     	}
     	return false;
     }
     
-    private boolean isWallSign(Block block) {
-    	Material mat = block.getType();
+    private boolean isWallSign(Material mat) {
     	switch(mat) {
     	case OAK_WALL_SIGN:
     	case BIRCH_WALL_SIGN:
@@ -659,6 +651,8 @@ public class StorageSignCore extends JavaPlugin implements Listener{
     	case JUNGLE_WALL_SIGN:
     	case ACACIA_WALL_SIGN:
     	case DARK_OAK_WALL_SIGN:
+    	case CRIMSON_WALL_SIGN:
+    	case WARPED_WALL_SIGN:
     		return true;
     	default:
     	}
