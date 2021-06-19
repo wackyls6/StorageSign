@@ -5,10 +5,12 @@ import java.util.Map;
 import java.util.Set;
 
 import org.bukkit.ChatColor;
+import org.bukkit.DyeColor;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.UndefinedNullability;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
@@ -184,7 +186,7 @@ public class StorageSignCore extends JavaPlugin implements Listener{
 					storageSign.setMaterial(mat);
 					BannerMeta bannerMeta = (BannerMeta)itemMainHand.getItemMeta();
 					if(bannerMeta.getPatterns().size() == 8) {
-						ominousBannerMeta = bannerMeta;
+						ominousBannerMeta = bannerMeta;//襲撃バナー登録
 						storageSign.setDamage((short) 8);
 					}
 				}
@@ -243,6 +245,7 @@ public class StorageSignCore extends JavaPlugin implements Listener{
                 if (player.isSneaking()) {
                     storageSign.addAmount(itemMainHand.getAmount());
                     player.getInventory().clear(player.getInventory().getHeldItemSlot());
+                    if(isDye(itemMainHand)) sign.setColor(getDyeColor(itemMainHand));//同色用
                 } else for (int i=0; i<player.getInventory().getSize(); i++) {
                     ItemStack item = player.getInventory().getItem(i);
                     if (storageSign.isSimilar(item)) {
@@ -253,9 +256,15 @@ public class StorageSignCore extends JavaPlugin implements Listener{
 
                 player.updateInventory();
             } else if (config.getBoolean("manual-export"))/*放出*/ {
-                if (storageSign.isEmpty()) return;
+            	
+            	if(itemMainHand != null &&  isDye(itemMainHand)) {//染料の場合、放出せずに看板に色がつく
+            		event.setUseItemInHand(Result.ALLOW);
+        			event.setUseInteractedBlock(Result.ALLOW);//最初にDENYにしてたので戻す、同色染料が使えない。
+            		return;
+            	}
+            	
+            	else  if (storageSign.isEmpty()) return;
                 ItemStack item = storageSign.getContents();
-
                 int max = item.getMaxStackSize();
 
                 if (player.isSneaking()) storageSign.addAmount(-1);
@@ -277,7 +286,7 @@ public class StorageSignCore extends JavaPlugin implements Listener{
         }
     }
 
-    @EventHandler
+	@EventHandler
     public void onSignChange(SignChangeEvent event) {
         if (event.isCancelled())return;
         Sign sign = (Sign) event.getBlock().getState();
@@ -340,6 +349,10 @@ public class StorageSignCore extends JavaPlugin implements Listener{
         StorageSign storageSign = new StorageSign(event.getItemInHand());
         Sign sign = (Sign)event.getBlock().getState();
         for (int i=0; i<4; i++) sign.setLine(i, storageSign.getSigntext(i));
+        
+        if(storageSign.getSmat() == Material.DARK_OAK_SIGN ) {
+        	sign.setColor(DyeColor.WHITE);//文字色を白くする
+        }
         sign.update();
         player.closeInventory();//時差発動が必要らしい
     }
@@ -657,6 +670,71 @@ public class StorageSignCore extends JavaPlugin implements Listener{
     	default:
     	}
     	return false;
+    }    
+    
+    private boolean isDye(ItemStack item) {
+    	Material mat = item.getType();
+    	switch(mat) {
+    	case WHITE_DYE:
+    	case ORANGE_DYE:
+    	case MAGENTA_DYE:
+    	case LIGHT_BLUE_DYE:
+    	case YELLOW_DYE:
+    	case LIME_DYE:
+    	case PINK_DYE:
+    	case GRAY_DYE:
+    	case LIGHT_GRAY_DYE:
+    	case CYAN_DYE:
+    	case PURPLE_DYE:
+    	case BLUE_DYE:
+    	case BROWN_DYE:
+    	case GREEN_DYE:
+    	case RED_DYE:
+    	case BLACK_DYE:
+    		return true;
+    	default:
+    	}
+    	return false;
+    }
+
+    private DyeColor getDyeColor(ItemStack item) {
+    	Material mat = item.getType();
+    	switch(mat) {
+    	case WHITE_DYE:
+    		return DyeColor.WHITE;
+    	case ORANGE_DYE:
+    		return DyeColor.ORANGE;
+    	case MAGENTA_DYE:
+    		return DyeColor.MAGENTA;
+    	case LIGHT_BLUE_DYE:
+    		return DyeColor.LIGHT_BLUE;
+    	case YELLOW_DYE:
+    		return DyeColor.YELLOW;
+    	case LIME_DYE:
+    		return DyeColor.LIME;
+    	case PINK_DYE:
+    		return DyeColor.PINK;
+    	case GRAY_DYE:
+    		return DyeColor.GRAY;
+    	case LIGHT_GRAY_DYE:
+    		return DyeColor.LIGHT_GRAY;
+    	case CYAN_DYE:
+    		return DyeColor.CYAN;
+    	case PURPLE_DYE:
+    		return DyeColor.PURPLE;
+    	case BLUE_DYE:
+    		return DyeColor.BLUE;
+    	case BROWN_DYE:
+    		return DyeColor.BROWN;
+    	case GREEN_DYE:
+    		return DyeColor.GREEN;
+    	case RED_DYE:
+    		return DyeColor.RED;
+    	case BLACK_DYE:
+    		return DyeColor.BLACK;
+    	default:
+    	}
+    	return null;
     }
 
 }
