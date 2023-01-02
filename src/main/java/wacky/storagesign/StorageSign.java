@@ -88,6 +88,7 @@ public class StorageSign {
         else if(signmat == Material.DARK_OAK_WALL_SIGN) smat = Material.DARK_OAK_SIGN;
         else if(signmat == Material.CRIMSON_WALL_SIGN) smat = Material.CRIMSON_SIGN;
         else if(signmat == Material.WARPED_WALL_SIGN) smat = Material.WARPED_SIGN;
+        else if(signmat == Material.MANGROVE_WALL_SIGN) smat = Material.MANGROVE_SIGN;
         else smat = signmat;
         
     }
@@ -127,6 +128,10 @@ public class StorageSign {
         else if(str.matches("WarpedStorageSign")) {
         	damage = 1;
         	return Material.WARPED_SIGN;
+        }
+        else if(str.matches("MangroveStorageSign")) {
+            damage = 1;
+            return Material.MANGROVE_SIGN;
         }
         if (str.matches("HorseEgg")){
         	damage = 1;
@@ -171,6 +176,7 @@ public class StorageSign {
         else if(mat == Material.DARK_OAK_SIGN && damage == 1) return "DarkOakStorageSign";
         else if(mat == Material.CRIMSON_SIGN && damage == 1) return "CrimsonStorageSign";
         else if(mat == Material.WARPED_SIGN && damage == 1) return "WarpedStorageSign";
+        else if(mat == Material.MANGROVE_SIGN && damage == 1) return "MangroveStorageSign";
         //else if (mat == Material.LEGACY_STAINED_GLASS_PANE) return damage == 0 ? "STAINGLASS_PANE" : "STAINGLASS_P:" + damage;
         //else if (mat == Material.LEGACY_REDSTONE_COMPARATOR) return "RS_COMPARATOR";
         //else if (mat == Material.LEGACY_REDSTONE_TORCH_ON) return "REDSTONE_TORCH";
@@ -259,7 +265,7 @@ public class StorageSign {
         	if(damage == 1) return emptyHorseEgg();
         }if(mat == Material.STONE_SLAB) return new ItemStack(mat,1);//ダメージ値0にする
         else if(mat == Material.OAK_SIGN  || mat == Material.SPRUCE_SIGN || mat == Material.BIRCH_SIGN || mat == Material.JUNGLE_SIGN || 
-        		mat == Material.ACACIA_SIGN  || mat == Material.DARK_OAK_SIGN || mat == Material.CRIMSON_SIGN  || mat == Material.WARPED_SIGN) {
+        		mat == Material.ACACIA_SIGN  || mat == Material.DARK_OAK_SIGN || mat == Material.CRIMSON_SIGN  || mat == Material.WARPED_SIGN  || mat == Material.MANGROVE_SIGN) {
         	if(damage == 0) return new ItemStack(mat,1);
         	else return emptySign(mat);
         }
