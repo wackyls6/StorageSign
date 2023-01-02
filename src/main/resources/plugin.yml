@@ -1,6 +1,6 @@
 name: StorageSign
 main: wacky.storagesign.StorageSignCore
-version: 1.2.8
+version: 1.4.0
 author: wackyls6
 api-version: 1.15
 softdepend: [WorldGuard]

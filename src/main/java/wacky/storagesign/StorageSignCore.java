@@ -10,7 +10,6 @@ import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
-import org.bukkit.UndefinedNullability;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
@@ -64,8 +63,8 @@ public class StorageSignCore extends JavaPlugin implements Listener{
 		this.saveConfig();
 
 		//鯖別レシピが実装されたら
-		Material[] sign = {Material.OAK_SIGN,Material.BIRCH_SIGN,Material.SPRUCE_SIGN,Material.JUNGLE_SIGN,Material.ACACIA_SIGN,Material.DARK_OAK_SIGN,Material.CRIMSON_SIGN,Material.WARPED_SIGN};
-		for(int i= 0 ;i<8;i++) {
+		Material[] sign = {Material.OAK_SIGN,Material.BIRCH_SIGN,Material.SPRUCE_SIGN,Material.JUNGLE_SIGN,Material.ACACIA_SIGN,Material.DARK_OAK_SIGN,Material.CRIMSON_SIGN,Material.WARPED_SIGN,Material.MANGROVE_SIGN};
+		for(int i= 0 ;i<9;i++) {
 			
 		ShapedRecipe storageSignRecipe = new ShapedRecipe(new NamespacedKey(this,"ssr"+i),StorageSign.emptySign(sign[i]));
 		//ShapedRecipe storageSignRecipe = new ShapedRecipe(StorageSign.emptySign());
@@ -246,6 +245,7 @@ public class StorageSignCore extends JavaPlugin implements Listener{
                     storageSign.addAmount(itemMainHand.getAmount());
                     player.getInventory().clear(player.getInventory().getHeldItemSlot());
                     if(isDye(itemMainHand)) sign.setColor(getDyeColor(itemMainHand));//同色用
+					if(isSac(itemMainHand)) sign.setGlowingText(isGlowSac(itemMainHand)); //イカスミ用
                 } else for (int i=0; i<player.getInventory().getSize(); i++) {
                     ItemStack item = player.getInventory().getItem(i);
                     if (storageSign.isSimilar(item)) {
@@ -262,7 +262,11 @@ public class StorageSignCore extends JavaPlugin implements Listener{
         			event.setUseInteractedBlock(Result.ALLOW);//最初にDENYにしてたので戻す、同色染料が使えない。
             		return;
             	}
-            	
+            	else if (itemMainHand != null &&  isSac(itemMainHand)) {
+					event.setUseItemInHand(Result.ALLOW);
+					event.setUseInteractedBlock(Result.ALLOW);
+					return;
+				}
             	else  if (storageSign.isEmpty()) return;
                 ItemStack item = storageSign.getContents();
                 int max = item.getMaxStackSize();
@@ -650,6 +654,7 @@ public class StorageSignCore extends JavaPlugin implements Listener{
     	case DARK_OAK_SIGN:
     	case CRIMSON_SIGN:
     	case WARPED_SIGN:
+		case MANGROVE_SIGN:
     		return true;
     	default:
     	}
@@ -666,6 +671,7 @@ public class StorageSignCore extends JavaPlugin implements Listener{
     	case DARK_OAK_WALL_SIGN:
     	case CRIMSON_WALL_SIGN:
     	case WARPED_WALL_SIGN:
+		case MANGROVE_WALL_SIGN:
     		return true;
     	default:
     	}
@@ -737,4 +743,26 @@ public class StorageSignCore extends JavaPlugin implements Listener{
     	return null;
     }
 
+	private boolean isSac(ItemStack item) {
+		Material mat = item.getType();
+		switch(mat) {
+			case INK_SAC:
+			case GLOW_INK_SAC:
+				return true;
+			default:
+		}
+		return false;
+	}
+
+	private boolean isGlowSac(ItemStack item) {
+		Material mat = item.getType();
+		switch(mat) {
+			case INK_SAC:
+				return false;
+			case GLOW_INK_SAC:
+				return true;
+			default:
+		}
+		return false;
+	}
 }
