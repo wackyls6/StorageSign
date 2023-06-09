@@ -3,6 +3,8 @@ package wacky.storagesign;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.bukkit.ChatColor;
 import org.bukkit.DyeColor;
@@ -49,6 +51,7 @@ import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionData;
+import java.util.logging.Logger;
 
 public class StorageSignCore extends JavaPlugin implements Listener{
 
@@ -63,8 +66,8 @@ public class StorageSignCore extends JavaPlugin implements Listener{
 		this.saveConfig();
 
 		//鯖別レシピが実装されたら
-		Material[] sign = {Material.OAK_SIGN,Material.BIRCH_SIGN,Material.SPRUCE_SIGN,Material.JUNGLE_SIGN,Material.ACACIA_SIGN,Material.DARK_OAK_SIGN,Material.CRIMSON_SIGN,Material.WARPED_SIGN,Material.MANGROVE_SIGN};
-		for(int i= 0 ;i<9;i++) {
+		Material[] sign = {Material.OAK_SIGN,Material.BIRCH_SIGN,Material.SPRUCE_SIGN,Material.JUNGLE_SIGN,Material.ACACIA_SIGN,Material.DARK_OAK_SIGN,Material.CRIMSON_SIGN,Material.WARPED_SIGN,Material.MANGROVE_SIGN,Material.CHERRY_SIGN,Material.BAMBOO_SIGN};
+		for(int i= 0 ;i<11;i++) {
 			
 		ShapedRecipe storageSignRecipe = new ShapedRecipe(new NamespacedKey(this,"ssr"+i),StorageSign.emptySign(sign[i]));
 		//ShapedRecipe storageSignRecipe = new ShapedRecipe(StorageSign.emptySign());
@@ -319,7 +322,7 @@ public class StorageSignCore extends JavaPlugin implements Listener{
         Map<Location, StorageSign> breakSignMap = new HashMap<>();
         if (isStorageSign(block)) breakSignMap.put(block.getLocation(), new StorageSign((Sign)block.getState(),block.getType()));
 
-        for (int i=0; i<5; i++) {//東西南北で判定
+		for (int i=0; i<5; i++) {//東西南北で判定
             BlockFace[] face = {BlockFace.UP,BlockFace.SOUTH,BlockFace.NORTH,BlockFace.EAST,BlockFace.WEST};
             block = event.getBlock().getRelative(face[i]);
             if (i==0 && isSignPost(block) && isStorageSign(block)) breakSignMap.put(block.getLocation(), new StorageSign((Sign)block.getState(),block.getType()));
@@ -335,9 +338,9 @@ public class StorageSignCore extends JavaPlugin implements Listener{
         for (Location loc : breakSignMap.keySet()) {
             StorageSign sign = breakSignMap.get(loc);
             Location loc2 = loc;
-            loc2.add(0.5, 0.5, 0.5);//中心にドロップさせる
-            loc.getWorld().dropItem(loc2, sign.getStorageSign());
-            loc.getBlock().setType(Material.AIR);
+			loc2.add(0.5, 0.5, 0.5);//中心にドロップさせる
+			loc.getWorld().dropItem(loc2, sign.getStorageSign());
+			loc.getBlock().setType(Material.AIR);
         }
     }
 
@@ -655,6 +658,8 @@ public class StorageSignCore extends JavaPlugin implements Listener{
     	case CRIMSON_SIGN:
     	case WARPED_SIGN:
 		case MANGROVE_SIGN:
+		case CHERRY_SIGN:
+		case BAMBOO_SIGN:
     		return true;
     	default:
     	}
@@ -672,6 +677,8 @@ public class StorageSignCore extends JavaPlugin implements Listener{
     	case CRIMSON_WALL_SIGN:
     	case WARPED_WALL_SIGN:
 		case MANGROVE_WALL_SIGN:
+		case CHERRY_WALL_SIGN:
+		case BAMBOO_WALL_SIGN:
     		return true;
     	default:
     	}
