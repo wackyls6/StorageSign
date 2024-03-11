@@ -102,7 +102,7 @@ public class StorageSignCore extends JavaPlugin implements Listener{
 	public boolean isStorageSign(Block block) {
 		if(isSignPost(block.getType()) || isWallSign(block.getType())) {			
 			Sign sign = (Sign) block.getState();
-			if (sign.getLine(0).matches("StorageSign")) return true;
+			if (sign.getSide(Side.FRONT).getLine(0).matches("StorageSign")) return true;
 		}
 		return false;
 	}

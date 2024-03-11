@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.bukkit.Material;
 import org.bukkit.block.Sign;
+import org.bukkit.block.sign.Side;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BannerMeta;
@@ -57,7 +58,7 @@ public class StorageSign {
     }*/
     
 	public StorageSign(Sign sign,Material signmat) {//上と統合したい
-        String[] line2 = sign.getLine(1).trim().split(":");
+        String[] line2 = sign.getSide(Side.FRONT).getLine(1).trim().split(":");
         mat = getMaterial(line2[0]);
         isEmpty = mat == null || mat == Material.AIR;
         
