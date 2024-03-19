@@ -16,6 +16,7 @@ import org.bukkit.block.BlockState;
 import org.bukkit.block.DoubleChest;
 import org.bukkit.block.Sign;
 import org.bukkit.block.data.type.WallSign;
+import org.bukkit.block.sign.Side;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.enchantments.Enchantment;
@@ -49,6 +50,9 @@ import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionData;
+import org.bukkit.potion.PotionType;
+
+import java.util.logging.Logger;
 
 public class StorageSignCore extends JavaPlugin implements Listener{
 
@@ -63,8 +67,8 @@ public class StorageSignCore extends JavaPlugin implements Listener{
 		this.saveConfig();
 
 		//鯖別レシピが実装されたら
-		Material[] sign = {Material.OAK_SIGN,Material.BIRCH_SIGN,Material.SPRUCE_SIGN,Material.JUNGLE_SIGN,Material.ACACIA_SIGN,Material.DARK_OAK_SIGN,Material.CRIMSON_SIGN,Material.WARPED_SIGN,Material.MANGROVE_SIGN};
-		for(int i= 0 ;i<9;i++) {
+		Material[] sign = {Material.OAK_SIGN,Material.BIRCH_SIGN,Material.SPRUCE_SIGN,Material.JUNGLE_SIGN,Material.ACACIA_SIGN,Material.DARK_OAK_SIGN,Material.CRIMSON_SIGN,Material.WARPED_SIGN,Material.MANGROVE_SIGN,Material.CHERRY_SIGN,Material.BAMBOO_SIGN};
+		for(int i= 0 ;i<11;i++) {
 			
 		ShapedRecipe storageSignRecipe = new ShapedRecipe(new NamespacedKey(this,"ssr"+i),StorageSign.emptySign(sign[i]));
 		//ShapedRecipe storageSignRecipe = new ShapedRecipe(StorageSign.emptySign());
@@ -98,7 +102,7 @@ public class StorageSignCore extends JavaPlugin implements Listener{
 	public boolean isStorageSign(Block block) {
 		if(isSignPost(block.getType()) || isWallSign(block.getType())) {			
 			Sign sign = (Sign) block.getState();
-			if (sign.getLine(0).matches("StorageSign")) return true;
+			if (sign.getSide(Side.FRONT).getLine(0).matches("StorageSign")) return true;
 		}
 		return false;
 	}
@@ -195,7 +199,7 @@ public class StorageSignCore extends JavaPlugin implements Listener{
 					storageSign.setDamage(itemMainHand.getDurability());
 				}
 
-				for (int i=0; i<4; i++) sign.setLine(i, storageSign.getSigntext(i));
+				for (int i=0; i<4; i++) sign.getSide(Side.FRONT).setLine(i, storageSign.getSigntext(i));
 				sign.update();
 				return;
 			}
@@ -233,7 +237,7 @@ public class StorageSignCore extends JavaPlugin implements Listener{
 					player.getInventory().setItemInMainHand(itemSign.getStorageSign());
 					storageSign.setAmount(storageSign.getAmount() - (itemSign.getStackSize() * itemSign.getAmount()));//余りは看板に引き受けてもらう
 				}
-				for (int i=0; i<4; i++) sign.setLine(i, storageSign.getSigntext(i));
+				for (int i=0; i<4; i++) sign.getSide(Side.FRONT).setLine(i, storageSign.getSigntext(i));
 				sign.update();
 				return;
 			}
@@ -244,8 +248,8 @@ public class StorageSignCore extends JavaPlugin implements Listener{
                 if (player.isSneaking()) {
                     storageSign.addAmount(itemMainHand.getAmount());
                     player.getInventory().clear(player.getInventory().getHeldItemSlot());
-                    if(isDye(itemMainHand)) sign.setColor(getDyeColor(itemMainHand));//同色用
-					if(isSac(itemMainHand)) sign.setGlowingText(isGlowSac(itemMainHand)); //イカスミ用
+                    if(isDye(itemMainHand)) sign.getSide(Side.FRONT).setColor(getDyeColor(itemMainHand)); //同色用
+					if(isSac(itemMainHand)) sign.getSide(Side.FRONT).setGlowingText(isGlowSac(itemMainHand)); //イカスミ用
                 } else for (int i=0; i<player.getInventory().getSize(); i++) {
                     ItemStack item = player.getInventory().getItem(i);
                     if (storageSign.isSimilar(item)) {
@@ -285,21 +289,27 @@ public class StorageSignCore extends JavaPlugin implements Listener{
                 player.getWorld().dropItem(loc, item);
             }
 
-            for (int i=0; i<4; i++) sign.setLine(i, storageSign.getSigntext(i));
+            for (int i=0; i<4; i++) sign.getSide(Side.FRONT).setLine(i, storageSign.getSigntext(i));
             sign.update();
         }
     }
 
 	@EventHandler
     public void onSignChange(SignChangeEvent event) {
-        if (event.isCancelled())return;
+        if (event.isCancelled()) return;
+
+		// バックの場合、キャンセルイベントを発行して終了する
+		if(event.getSide().equals(Side.BACK) ){
+			event.setCancelled(true);
+			return;
+		}
         Sign sign = (Sign) event.getBlock().getState();
 
-        if (sign.getLine(0).matches("StorageSign"))/*変更拒否*/ {
-            event.setLine(0, sign.getLine(0));
-            event.setLine(1, sign.getLine(1));
-            event.setLine(2, sign.getLine(2));
-            event.setLine(3, sign.getLine(3));
+        if (sign.getSide(Side.FRONT).getLine(0).matches("StorageSign"))/*変更拒否*/ {
+            event.setLine(0, sign.getSide(Side.FRONT).getLine(0));
+            event.setLine(1, sign.getSide(Side.FRONT).getLine(1));
+            event.setLine(2, sign.getSide(Side.FRONT).getLine(2));
+            event.setLine(3, sign.getSide(Side.FRONT).getLine(3));
             sign.update();
         } else if (event.getLine(0).equalsIgnoreCase("storagesign"))/*書き込んで生成禁止*/ {
             if (event.getPlayer().hasPermission("storagesign.create")) {
@@ -319,7 +329,7 @@ public class StorageSignCore extends JavaPlugin implements Listener{
         Map<Location, StorageSign> breakSignMap = new HashMap<>();
         if (isStorageSign(block)) breakSignMap.put(block.getLocation(), new StorageSign((Sign)block.getState(),block.getType()));
 
-        for (int i=0; i<5; i++) {//東西南北で判定
+		for (int i=0; i<5; i++) {//東西南北で判定
             BlockFace[] face = {BlockFace.UP,BlockFace.SOUTH,BlockFace.NORTH,BlockFace.EAST,BlockFace.WEST};
             block = event.getBlock().getRelative(face[i]);
             if (i==0 && isSignPost(block) && isStorageSign(block)) breakSignMap.put(block.getLocation(), new StorageSign((Sign)block.getState(),block.getType()));
@@ -335,9 +345,9 @@ public class StorageSignCore extends JavaPlugin implements Listener{
         for (Location loc : breakSignMap.keySet()) {
             StorageSign sign = breakSignMap.get(loc);
             Location loc2 = loc;
-            loc2.add(0.5, 0.5, 0.5);//中心にドロップさせる
-            loc.getWorld().dropItem(loc2, sign.getStorageSign());
-            loc.getBlock().setType(Material.AIR);
+			loc2.add(0.5, 0.5, 0.5);//中心にドロップさせる
+			loc.getWorld().dropItem(loc2, sign.getStorageSign());
+			loc.getBlock().setType(Material.AIR);
         }
     }
 
@@ -352,10 +362,10 @@ public class StorageSignCore extends JavaPlugin implements Listener{
         }
         StorageSign storageSign = new StorageSign(event.getItemInHand());
         Sign sign = (Sign)event.getBlock().getState();
-        for (int i=0; i<4; i++) sign.setLine(i, storageSign.getSigntext(i));
+        for (int i=0; i<4; i++) sign.getSide(Side.FRONT).setLine(i, storageSign.getSigntext(i));
         
         if(storageSign.getSmat() == Material.DARK_OAK_SIGN ) {
-        	sign.setColor(DyeColor.WHITE);//文字色を白くする
+        	sign.getSide(Side.FRONT).setColor(DyeColor.WHITE);//文字色を白くする
         }
         sign.update();
         player.closeInventory();//時差発動が必要らしい
@@ -370,15 +380,16 @@ public class StorageSignCore extends JavaPlugin implements Listener{
         Sign sign = null;
         StorageSign storageSign = null;
         ItemStack item = event.getItem();
-        if (config.getBoolean("auto-import")) {
+		if (config.getBoolean("auto-import")) {
         	if (event.getDestination().getLocation() == null);//コンポスター用に生成された一時インベントリ
         	else if (event.getDestination().getHolder() instanceof Minecart);//何もしない
             else if (event.getDestination().getHolder() instanceof DoubleChest) {
                 DoubleChest lc = (DoubleChest)event.getDestination().getHolder();
                 blockInventory[0] = (BlockState) lc.getLeftSide();
                 blockInventory[1] = (BlockState) lc.getRightSide();
-            } else {
-                blockInventory[0] = (BlockState) event.getDestination().getHolder();
+            } else if(!(event.getDestination().getHolder() instanceof  BlockState));//ブロック情報が取得できない場合も何もしない
+			  else {
+				blockInventory[0] = (BlockState) event.getDestination().getHolder();
             }
 
             importLoop:
@@ -418,14 +429,15 @@ public class StorageSignCore extends JavaPlugin implements Listener{
             blockInventory[0] = null;
             blockInventory[1] = null;
             flag = false;
-        	if (event.getSource().getLocation() == null);//一時インベントリ
+			if (event.getSource().getLocation() == null);//一時インベントリ
         	else if (event.getSource().getHolder() instanceof Minecart);
             else if (event.getSource().getHolder() instanceof DoubleChest) {
                 DoubleChest lc = (DoubleChest)event.getSource().getHolder();
                 blockInventory[0] = (BlockState) lc.getLeftSide();
                 blockInventory[1] = (BlockState) lc.getRightSide();
-            } else {
-                blockInventory[0] = (BlockState) event.getSource().getHolder();
+            } else if(!(event.getSource().getHolder() instanceof  BlockState));//ブロック情報が取得できない時も何もしない
+			  else {
+				blockInventory[0] = (BlockState) event.getSource().getHolder();
             }
 
             exportLoop:
@@ -461,7 +473,7 @@ public class StorageSignCore extends JavaPlugin implements Listener{
             inv.removeItem(item);
             storageSign.addAmount(item.getAmount());
         }
-        for (int i=0; i<4; i++) sign.setLine(i, storageSign.getSigntext(i));
+        for (int i=0; i<4; i++) sign.getSide(Side.FRONT).setLine(i, storageSign.getSigntext(i));
         sign.update();
     }
 
@@ -537,7 +549,7 @@ public class StorageSignCore extends JavaPlugin implements Listener{
             inv.addItem(item);
             storageSign.addAmount(-item.getAmount());
         }
-        for (int i=0; i<4; i++) sign.setLine(i, storageSign.getSigntext(i));
+        for (int i=0; i<4; i++) sign.getSide(Side.FRONT).setLine(i, storageSign.getSigntext(i));
         sign.update();
     }
 
@@ -655,6 +667,8 @@ public class StorageSignCore extends JavaPlugin implements Listener{
     	case CRIMSON_SIGN:
     	case WARPED_SIGN:
 		case MANGROVE_SIGN:
+		case CHERRY_SIGN:
+		case BAMBOO_SIGN:
     		return true;
     	default:
     	}
@@ -672,6 +686,8 @@ public class StorageSignCore extends JavaPlugin implements Listener{
     	case CRIMSON_WALL_SIGN:
     	case WARPED_WALL_SIGN:
 		case MANGROVE_WALL_SIGN:
+		case CHERRY_WALL_SIGN:
+		case BAMBOO_WALL_SIGN:
     		return true;
     	default:
     	}
