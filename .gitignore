@@ -3,3 +3,4 @@ setblock
 pluginsb
 pluginss
 /target/
+/project.properties

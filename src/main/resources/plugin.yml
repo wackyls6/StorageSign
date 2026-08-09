@@ -1,10 +1,12 @@
 name: StorageSign
 main: wacky.storagesign.StorageSignCore
-version: 1.2.8
+version: ${version}
+description: StorageSign Plugin for Spigot. You can 2billion items storeing to wooden sign.
 author: wackyls6
-api-version: 1.15
+api-version: 1.21.4
+depend: [Logger, FarmNBT]
 softdepend: [WorldGuard]
-website: http://forum.minecraftuser.jp/viewtopic.php?t=15065
+website: https://github.com/wackyls6/StorageSign
 permissions:
     storagesign.*:
         description:

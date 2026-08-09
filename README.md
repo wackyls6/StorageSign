@@ -8,6 +8,13 @@ StorageSign
 
 使い方についてはこちらをご参照ください　http://farm-server.com/ss.html  暇があったら追記します・・・
 
+前提プラグイン
+以下の2つが前提となっています。
+FarmNBT
+https://github.com/snowpegeon/FarmNBT
+
+logger
+https://github.com/teruteru128/logger
 
 ---
 ~~Gitをいじってたら消えたっぽい。~~
